@@ -3,7 +3,7 @@ import * as jwt from "jsonwebtoken"; // biblioteka sa kreiranje dokena
 // verify ima ulogu da validira svaki put kada korisnik zeli da uradi nesto zasticeno 
 
 
-export const AUTH_COOKIE="auth"; //kolacic kasnije gde cemo cuvati doken
+export const AUTH_COOKIE="auth"; //kolacic kasnije gde cemo cuvati token
 
 const JWT_SECRET=process.env.JWT_SECRET as jwt.Secret;
 const JWT_EXPIRES=process.env.JWT_EXPIRES ?? "7d"; // ovde izvlaci kada token istice ako nema onda 7d
@@ -19,7 +19,7 @@ export type JwtUserClaims={ // ako ima tokena ovo je tip podataka koji da algori
     role?:string;
 };
 
-export function signAuthToken(claims:JwtUserClaims){
+export function signAuthToken(claims:JwtUserClaims){ //nju pozivamo svaki put kada hocfemo da kreiramo token kada se korisnik uloguje u aplikaciju
     return jwt.sign(claims as jwt.JwtPayload, JWT_SECRET,{
         algorithm:"HS256",
 
@@ -28,6 +28,27 @@ export function signAuthToken(claims:JwtUserClaims){
     });
 }
 
-///export function verifyAuthToken(token:string):JwtUserClaims{ 
-  //  const payload=jwt.verify(token,JWT_SECRET) as jwt
-//}
+export function verifyAuthToken(token:string):JwtUserClaims{  //funkcija koju koristimo kada je korisnik vec ulogovan
+    const payload=jwt.verify(token,JWT_SECRET) as jwt.JwtPayload & JwtUserClaims; //payload je token
+    if(!payload?.sub || !payload?.email){ //ako je uredu token dolazi iz naseg servera
+        throw new Error("invalid token");
+    }
+
+    return{ //vraca json objekat desifrovan
+        sub:payload.sub,
+        email:payload.email,
+        name:payload.name,
+        role:payload.role
+    };
+}
+//xss napad neko pokusava da ubaci javascript kode zlonamerni i da se izvrsi kod neko klijenta
+//csrf napad kada neko pokusava da bez naseg znanja posalje zahtev sa naseg sajta kada smo ulogovani npr sajt banke
+export function cookieOpts(){ //bezbedonosne  opcije za kolacice
+    return{
+        httpOnly:true,//zbog xss napada, obezbedjuje nece moci da se ucita kuki koji nije dosao sa naseg servera
+        sameSite: "lax"as const,//samo na nasem sajtu citaju podaci koji su dosli sa naseg sajta
+        secure: process.env.NODE_ENV==="production", // kada okacimo nas sajt na internet da on radi kukiji mogu da se salju samo sa http zahteva
+        patj:"/",
+        maxAge:60*60*24*7,
+    };
+}
