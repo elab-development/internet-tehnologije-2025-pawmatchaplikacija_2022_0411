@@ -54,19 +54,19 @@ export async function POST(req: Request) { //zato sto kreiramo neki obj koji je 
     }
     // 5. sign JWT kreiram token, 
     const token = signAuthToken({
-        sub: u.id,
+        id: u.id,
         email: u.email,
         ime: u.ime ?? undefined,
         prezime: u.prezime ?? undefined,
-        role: u.uloga ?? undefined
+        uloga: u.uloga ?? undefined
     });
 
     // 6. set cookie with awt, korisniku vracamo token da bi mogao da upravlja
     const res = NextResponse.json({
-        sub: u.id,                     // OBAVEZNO
+        id: u.id,                     // OBAVEZNO
         email: u.email,                // OBAVEZNO
-        name: `${u.ime} ${u.prezime}`, // opciono
-        role: u.uloga,
+        ime: `${u.ime} ${u.prezime}`, // opciono
+        uloga: u.uloga,
     });
     res.cookies.set(AUTH_COOKIE, token, cookieOpts()); // u njegove kolacice stavimo kolacic za autentifikaciju,
     // pozivamo funkciju sa cookieparam

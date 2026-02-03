@@ -113,10 +113,10 @@ export async function POST(req: Request) { //zato sto kreiramo neki obj koji je 
     //                                                                                            ^
     // 6. sign JWT za tok usera kreiramo token sa podacima koje smo dobili nakon kreiranja obj u bazi |
     const token = signAuthToken({ //napravili u okviru auth fajla, importujemo ovu funkciju
-        sub: u.id,                     // OBAVEZNO
+        id: u.id,                     // OBAVEZNO
         email: u.email,                // OBAVEZNO
         ime: `${u.ime} ${u.prezime}`, // opciono
-        role: u.uloga,
+        uloga: u.uloga,
     });
 
 

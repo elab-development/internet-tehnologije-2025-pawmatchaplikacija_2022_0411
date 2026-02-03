@@ -13,11 +13,11 @@ if(!JWT_EXPIRES){
 }
 
 export type JwtUserClaims={ // ako ima tokena ovo je tip podataka koji da algoritmu sta koristi da bi kreirao token
-    sub:string; //subject ugl je ID 
+    id:string; //subject ugl je ID 
     email:string;
     ime?:string; // opciono
     prezime?:string,
-    role?:string;
+    uloga?:string;
 };
 
 export function signAuthToken(claims:JwtUserClaims){ //nju pozivamo svaki put kada hocfemo da kreiramo token kada se korisnik uloguje u aplikaciju
@@ -36,11 +36,11 @@ export function verifyAuthToken(token:string):JwtUserClaims{  //funkcija koju ko
     }
 
     return{ //vraca json objekat desifrovan
-        sub:payload.sub,
+        id:payload.sub,
         email:payload.email,
         ime:payload.name,
         prezime:payload.prezime,
-        role:payload.role
+        uloga:payload.role
     };
 }
 //xss napad neko pokusava da ubaci javascript kode zlonamerni i da se izvrsi kod neko klijenta
