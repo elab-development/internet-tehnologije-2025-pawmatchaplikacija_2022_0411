@@ -15,7 +15,8 @@ if(!JWT_EXPIRES){
 export type JwtUserClaims={ // ako ima tokena ovo je tip podataka koji da algoritmu sta koristi da bi kreirao token
     sub:string; //subject ugl je ID 
     email:string;
-    name?:string; // opciono
+    ime?:string; // opciono
+    prezime?:string,
     role?:string;
 };
 
@@ -37,7 +38,8 @@ export function verifyAuthToken(token:string):JwtUserClaims{  //funkcija koju ko
     return{ //vraca json objekat desifrovan
         sub:payload.sub,
         email:payload.email,
-        name:payload.name,
+        ime:payload.name,
+        prezime:payload.prezime,
         role:payload.role
     };
 }
@@ -48,7 +50,7 @@ export function cookieOpts(){ //bezbedonosne  opcije za kolacice
         httpOnly:true,//zbog xss napada, obezbedjuje nece moci da se ucita kuki koji nije dosao sa naseg servera
         sameSite: "lax"as const,//samo na nasem sajtu citaju podaci koji su dosli sa naseg sajta
         secure: process.env.NODE_ENV==="production", // kada okacimo nas sajt na internet da on radi kukiji mogu da se salju samo sa http zahteva
-        patj:"/",
+        path:"/",
         maxAge:60*60*24*7,
     };
 }
