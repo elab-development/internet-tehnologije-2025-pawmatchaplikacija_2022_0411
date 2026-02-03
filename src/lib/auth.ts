@@ -28,6 +28,6 @@ export function signAuthToken(claims:JwtUserClaims){
     });
 }
 
-///export function verifyAuthToken(token:string):JwtUserClaims{
+///export function verifyAuthToken(token:string):JwtUserClaims{ 
   //  const payload=jwt.verify(token,JWT_SECRET) as jwt
 //}
