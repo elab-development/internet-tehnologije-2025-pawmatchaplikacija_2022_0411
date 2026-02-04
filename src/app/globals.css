@@ -164,3 +164,20 @@ button {
 button:focus {
   outline: none;
 }
+
+
+/*animacija za prelaz*/
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slideIn {
+  animation: slideIn 180ms ease-out;
+}
