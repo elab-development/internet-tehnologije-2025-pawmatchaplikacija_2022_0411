@@ -13,11 +13,16 @@
   --shadow-strong: 0 22px 60px rgba(15, 23, 42, 0.14);
 
   --radius: 28px;
+
+  /* Safe-area (iPhone notch) */
+  --sat: env(safe-area-inset-top, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    /* Dark (ako korisnik ima dark mode na sistemu) */
     --background: 15 17 21;
     --foreground: 241 245 249;
     --muted: 148 163 184;
@@ -38,27 +43,67 @@ body {
   height: 100%;
 }
 
+html {
+  /* bolji scroll na mobilnom */
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
   margin: 0;
-
-  /* Svetla pozadina kao na prototipu (bela + blag gradient) */
-  background:
-    radial-gradient(900px 650px at 50% 0%, rgba(255,255,255,1) 0%, rgba(var(--background), 1) 62%);
-
   color: rgb(var(--foreground));
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  /* Spreči horizontalni scroll */
+  overflow-x: hidden;
+
+  /* Mobile feel */
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+
+  /* Pozadina */
+  background:
+    radial-gradient(
+      900px 650px at 50% 0%,
+      rgba(255, 255, 255, 1) 0%,
+      rgba(var(--background), 1) 62%
+    );
+
+  /* “Phone frame” centriran na desktopu */
+  display: flex;
+  justify-content: center;
 }
 
-/* Layout helper (kao kod nje) */
+/* Glavni “app” wrapper preko container-a (ako koristiš samo .container, ovo radi isto) */
 .container {
-  width: min(420px, 100%);
+  width: 100%;
+  max-width: 420px;
+
+  /* Safe-area + standard padding */
+  padding-top: calc(16px + var(--sat));
+  padding-right: calc(16px + var(--sar));
+  padding-bottom: calc(16px + var(--sab));
+  padding-left: calc(16px + var(--sal));
+
   margin: 0 auto;
-  padding: 16px;
+
+  /* Daj prostora dole jer tabbar je fiksiran */
+  padding-bottom: calc(92px + var(--sab));
 }
 
-/* Reusable "card" style (kao kod nje) */
+/* Malo zbijenije na manjim telefonima */
+@media (max-width: 360px) {
+  .container {
+    max-width: 360px;
+    padding-top: calc(12px + var(--sat));
+    padding-right: calc(12px + var(--sar));
+    padding-bottom: calc(92px + var(--sab));
+    padding-left: calc(12px + var(--sal));
+  }
+}
+
+/* Reusable "card" style */
 .card {
   background: rgb(var(--card));
   border: 1px solid rgb(var(--border));
@@ -66,12 +111,11 @@ body {
   box-shadow: var(--shadow);
 }
 
-/* Card hover polish */
 .card-hover:hover {
   box-shadow: var(--shadow-strong);
 }
 
-/* Swipe dugmad (X i srce) */
+/* Swipe dugmad */
 .fab {
   width: 56px;
   height: 56px;
@@ -94,7 +138,7 @@ body {
   border: none;
 }
 
-/* Badge (DOG/CAT) */
+/* Badge */
 .badge {
   display: inline-flex;
   align-items: center;
@@ -108,7 +152,7 @@ body {
   letter-spacing: 0.08em;
 }
 
-/* “Chips” tagovi na kartici */
+/* Chips */
 .chip {
   display: inline-flex;
   align-items: center;
@@ -121,11 +165,15 @@ body {
   backdrop-filter: blur(8px);
 }
 
-/* Bottom tab bar (da liči na prototip) */
+/* Bottom tab bar — pravi mobilni */
 .tabbar {
-  position: sticky;
-  bottom: 0;
-  margin-top: 14px;
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(10px + var(--sab));
+
+  width: calc(min(420px, 100vw) - 32px);
+  max-width: calc(420px - 32px);
 
   background: rgb(var(--card));
   border: 1px solid rgb(var(--border));
@@ -138,6 +186,8 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 10px;
+
+  z-index: 50;
 }
 
 .tabbar-btn {
@@ -165,8 +215,7 @@ button:focus {
   outline: none;
 }
 
-
-/*animacija za prelaz*/
+/* animacija */
 @keyframes slideIn {
   from {
     opacity: 0;

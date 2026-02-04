@@ -13,6 +13,7 @@ const TYPE_LABELS: Record<string, string> = {
 
 
 export default function MatchesPage() {
+
   const [page, setPage] = useState(0);
   const [animKey, setAnimKey] = useState(0);
   const [type, setType] = useState<string>("all");
@@ -25,7 +26,7 @@ export default function MatchesPage() {
     );
   }, [type]);
 
-  const types = useMemo(() => {
+  const types = useMemo(() => { // usememo da ne izvrsavamo ceo kod vise puta nego kao da cuva to sto mu dajemo
     return (Object.keys(TYPE_LABELS) as Array<keyof typeof TYPE_LABELS>).map((id) => ({
       id,
       label: TYPE_LABELS[id],
@@ -82,8 +83,8 @@ export default function MatchesPage() {
                 setAnimKey((k) => k + 1);
               }}
               className={`px-4 py-2 text-sm rounded-2xl transition ${type === id
-                  ? "bg-white shadow-sm font-semibold"
-                  : "text-slate-600"
+                ? "bg-white shadow-sm font-semibold"
+                : "text-slate-600"
                 }`}
             >
               {TYPE_LABELS[id]}

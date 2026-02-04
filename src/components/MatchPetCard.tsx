@@ -1,4 +1,5 @@
 import type { PetProfile } from "@/lib/types";
+import Link from "next/link";
 
 export default function MatchPetCard({
   pet,
@@ -28,10 +29,20 @@ export default function MatchPetCard({
         </div>
       </div>
 
-      {/* name */}
-      <div className="p-3">
+      {/* name + details button */}
+      <div className="flex items-center justify-between gap-2 p-3">
         <p className="text-sm font-semibold">{pet.ime}</p>
+
+        <Link
+          href={`/matches/${pet.id}`}
+          className="inline-flex items-center rounded-full border border-white/30 bg-white/60 px-3 py-1 text-xs font-medium text-slate-700 shadow-sm backdrop-blur hover:bg-white/80"
+        >
+
+          Detalji
+        </Link>
       </div>
+
+
     </div>
   );
 }
