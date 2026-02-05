@@ -59,6 +59,20 @@ async function seed() {
             .returning({ id: user.id, email: user.email });
         console.log("Korisnik je kreiran: ", ana.email);
 
+        const [test] = await tx
+            .insert(user)
+            .values({
+                uloga: "korisnik",
+                ime: "test",
+                prezime: "test",
+                email: "ana@pawmatch.com",
+                passHash: anaPassHash,
+                brojTelefona: "+38164123456",
+            })
+            .returning({ id: user.id, email: user.email });
+        console.log("Korisnik je kreiran: ", test.email);
+
+
         const [marko] = await tx
             .insert(user)
             .values({
@@ -71,6 +85,7 @@ async function seed() {
             })
             .returning({ id: user.id, email: user.email });
         console.log("Korisnik je kreiran: ", marko.email);
+        
 
         // 3) pets
         const [luna] = await tx

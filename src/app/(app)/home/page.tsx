@@ -36,7 +36,8 @@ export default function Home() {
   if (!currentPet) return null;
 
   return (
-    <div className="container">
+   <div className="container safe-bottom">
+
       <header className="mb-4">
         <p className="text-xs text-slate-500">📍 Belgrade</p>
         <h1 className="text-2xl font-semibold">Find your Pawmate</h1>

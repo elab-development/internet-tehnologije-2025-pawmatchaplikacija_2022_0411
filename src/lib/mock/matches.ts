@@ -66,22 +66,36 @@ export const matches: MatchCard[] = [
       createdAt: "2026-02-04",
     },
   },
-  {
+   {
     match: {
       id: "m_5",
       pet1Id: "p_dog_1",
-      pet2Id: "p_dog_4",
-      createdAt: "2026-02-05",
+      pet2Id: "p_cat_2",
+      createdAt: "2026-02-04",
     },
-    otherPet: pets[1],
+    otherPet: pets[0], // Toby (namerno ponovljen radi UI)
+    lastMessage: {
+      id: "msg_4",
+      matchId: "m_4",
+      senderPetId: pets[0].id,
+      text: "Voliš li duge šetnje?",
+      createdAt: "2026-02-04",
+    },
   },
   {
     match: {
-      id: "m_6",
+      id: "m_3",
       pet1Id: "p_dog_1",
-      pet2Id: "p_cat_3",
-      createdAt: "2026-02-06",
+      pet2Id: "p_dog_3",
+      createdAt: "2026-02-03",
     },
-    otherPet: pets[2],
+    otherPet: pets[3], // Rex
+    lastMessage: {
+      id: "msg_3",
+      matchId: "m_3",
+      senderPetId: pets[3].id,
+      text: "Ajmo u park 💚",
+      createdAt: "2026-02-03",
+    },
   },
 ];

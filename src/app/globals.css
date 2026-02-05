@@ -73,6 +73,8 @@ body {
   /* “Phone frame” centriran na desktopu */
   display: flex;
   justify-content: center;
+  min-height:100vh; 
+  overflow-y:auto
 }
 
 /* Glavni “app” wrapper preko container-a (ako koristiš samo .container, ovo radi isto) */
@@ -229,4 +231,7 @@ button:focus {
 
 .animate-slideIn {
   animation: slideIn 180ms ease-out;
+}
+.safe-bottom {
+  padding-bottom:220px;
 }
