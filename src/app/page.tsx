@@ -14,9 +14,31 @@ export default function HomePage() {
         color: "white",
       }}
     >
-      <h1 style={{ fontSize: 48, marginBottom: 40 }}>
-        PawMatch 🐾
-      </h1>
+      <img
+        src="/Login_1.png"
+        alt="Mačka i pas"
+        style={{
+          width: 220,
+          height: 220,
+          borderRadius: "50%",
+          border: "4px solid orange",
+          objectFit: "cover", 
+          marginBottom: 24,
+      }}
+/>
+
+      <p
+        style={{
+          fontSize: 22,
+          marginBottom: 40,
+          color: "white",
+          textAlign: "center",
+          maxWidth: 400,
+        }}
+      >
+        Let’s meet new pawple around you
+      </p>
+
 
       <div style={{ display: "flex", gap: 20 }}>
         <Link
