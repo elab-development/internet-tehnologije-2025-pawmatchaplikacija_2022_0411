@@ -1,12 +1,20 @@
 import type { PetProfile } from "@/lib/types";
 import Link from "next/link";
 
+type MatchPetPreview = {
+  id: string;
+  ime: string;
+  opis: string;
+  vrsta: string;
+  images: string[];
+};
+
 export default function MatchPetCard({
   pet,
   distanceLabel,
 }: {
-  pet: PetProfile;
-  distanceLabel: string; // npr "0.1km away"
+  pet: MatchPetPreview;
+  distanceLabel: string;
 }) {
   const firstImage = pet.images?.[0];
 

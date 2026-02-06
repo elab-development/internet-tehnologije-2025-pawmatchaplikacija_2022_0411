@@ -22,6 +22,7 @@ async function seed() {
     const adminPassHash = await bcrypt.hash("admin123", 10);
     const anaPassHash = await bcrypt.hash("ana123", 10);
     const markoPassHash = await bcrypt.hash("marko123", 10);
+    const bukiPassHash = await bcrypt.hash("Sifra123", 10);
 
     await db.transaction(async (tx) => {
         // 1) očisti sve (redosled zbog FK)
@@ -33,6 +34,20 @@ async function seed() {
         await tx.delete(user);
 
         // 2) users //kreira mi
+        const [buki] = await tx
+            .insert(user)
+            .values({
+                uloga: "korisnik",
+                ime: "Aleksandar",
+                prezime: "Bukovac",
+                email: "buki@test.com",
+                passHash: bukiPassHash,
+                brojTelefona: "061234567",
+            })
+            .returning({ id: user.id, email: user.email });
+
+        console.log("Korisnik je kreiran: ", buki.email);
+
         const [admin] = await tx
             .insert(user) //KREIRANJE
             .values({
@@ -59,20 +74,6 @@ async function seed() {
             .returning({ id: user.id, email: user.email });
         console.log("Korisnik je kreiran: ", ana.email);
 
-        const [test] = await tx
-            .insert(user)
-            .values({
-                uloga: "korisnik",
-                ime: "test",
-                prezime: "test",
-                email: "ana@pawmatch.com",
-                passHash: anaPassHash,
-                brojTelefona: "+38164123456",
-            })
-            .returning({ id: user.id, email: user.email });
-        console.log("Korisnik je kreiran: ", test.email);
-
-
         const [marko] = await tx
             .insert(user)
             .values({
@@ -85,9 +86,23 @@ async function seed() {
             })
             .returning({ id: user.id, email: user.email });
         console.log("Korisnik je kreiran: ", marko.email);
-        
+
 
         // 3) pets
+        const [rex] = await tx
+            .insert(pet)
+            .values({
+                vlasnikId: buki.id,
+                ime: "Rex",
+                opis: "Energičan pas, voli trčanje i igru.",
+                vrsta: "dog",
+                datumRodjenja: "2021-06-15",
+                pol: "male",
+                grad: "Belgrade",
+                interesovanja: "Running, Playing fetch",
+            })
+            .returning({ id: pet.id });
+
         const [luna] = await tx
             .insert(pet) //kreiram psa
             .values({
@@ -132,6 +147,8 @@ async function seed() {
 
         // 4) images
         await tx.insert(petImages).values([
+            { petId: rex.id, url: "https://picsum.photos/seed/rex1/600/800", sortOrder: 0 },
+            { petId: rex.id, url: "https://picsum.photos/seed/rex2/600/800", sortOrder: 1 },
             { petId: luna.id, url: "https://picsum.photos/seed/dobby1/600/800", sortOrder: 0 },
             { petId: luna.id, url: "https://picsum.photos/seed/dobby2/600/800", sortOrder: 1 },
 
@@ -143,6 +160,10 @@ async function seed() {
 
         // 5) swipes (napravićemo match Dobby <-> Lady)
         await tx.insert(swipes).values([
+            { fromPetId: rex.id, toPetId: nora.id, type: "like" },
+            { fromPetId: nora.id, toPetId: rex.id, type: "like" },
+            { fromPetId: rex.id, toPetId: luna.id, type: "like" },
+            { fromPetId: luna.id, toPetId: rex.id, type: "like" },
             { fromPetId: luna.id, toPetId: nora.id, type: "like" },
             { fromPetId: nora.id, toPetId: luna.id, type: "like" }, // ✅ obrnuto
 
@@ -167,6 +188,14 @@ async function seed() {
                 await tx
                     .insert(matches)
                     .values({ pet1Id, pet2Id })
+                    .returning({ id: matches.id })
+            )[0].id;
+        const [p1b, p2b] = sortPair(rex.id, nora.id);
+        const bukiMatch2 =
+            (
+                await tx
+                    .insert(matches)
+                    .values({ pet1Id: p1b, pet2Id: p2b })
                     .returning({ id: matches.id })
             )[0].id;
 

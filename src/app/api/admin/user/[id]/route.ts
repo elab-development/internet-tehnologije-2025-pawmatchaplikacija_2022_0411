@@ -5,6 +5,7 @@ import { eq } from "drizzle-orm";
 
 import { db } from "@/db";
 import { user } from "@/db/schema";
+import { requireAuth } from "@/lib/auth-server";
 
 function cleanString(x: unknown) {
   return typeof x === "string" ? x.trim() : "";
@@ -18,6 +19,9 @@ export async function GET(
   ctx: { params: Promise<{ id: string }> }
 ) {
   const { id } = await ctx.params;
+  const auth = await requireAuth();
+  if (!auth.ok) return auth.res;
+
 
   const userId = cleanString(id);
   if (!userId) {
@@ -65,17 +69,17 @@ export async function PATCH(
     prezime: string;
     brojTelefona: string;
     uloga: string;
-    email: string; // ako ne zelis menjanje email-a, obrisi ova 2 reda (ovaj i if ispod)
+    email: string; 
   }> = {};
 
   if (cleanString(body?.ime)) patch.ime = cleanString(body.ime);
   if (cleanString(body?.prezime)) patch.prezime = cleanString(body.prezime);
   if (cleanString(body?.brojTelefona)) patch.brojTelefona = cleanString(body.brojTelefona);
 
-  // OVO dozvoli samo ako hoces (admin use-case)
+  //  dozvoli samo ako hoces (admin use-case)
   if (cleanString(body?.uloga)) patch.uloga = cleanString(body.uloga);
 
-  // Ako hoces da user ne moze menjati email, ukloni ovo:
+  //  user ne moze menjati email, ukloni ovo:
   if (cleanString(body?.email)) patch.email = cleanString(body.email);
 
   // Ako nema sta da se apdejtuje

@@ -2,57 +2,103 @@
 
 import { useEffect, useState } from "react";
 import PetCard from "@/components/PetCard";
-import { pets } from "@/lib/mock/pets";
 import { shuffleArray } from "@/lib/selectors";
+import type { PetProfile } from "@/lib/types";
 
 export default function Home() {
+  const [pets, setPets] = useState<PetProfile[]>([]);
   const [index, setIndex] = useState(0);
-  const [shuffledPets, setShuffledPets] = useState<typeof pets>(pets); // start bez random
+  const [loading, setLoading] = useState(true);
 
-  // shuffle tek kad se komponenta mountuje u browseru
+  // 1) učitaj discover listu (bez mog pet-a)
   useEffect(() => {
-    setShuffledPets(shuffleArray(pets));
+    (async () => {
+      try {
+        setLoading(true);
+
+        const res = await fetch("/api/discover", {
+          credentials: "include",
+        });
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err?.error ?? "Greška pri učitavanju ljubimaca");
+        }
+
+        const data = await res.json();
+        setPets(shuffleArray(data.pets ?? []));
+        setIndex(0);
+      } catch (e: any) {
+        console.error("DISCOVER ERROR:", e.message);
+        setPets([]); // jasno stanje
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, []);
 
-  const currentPet = shuffledPets[index];
+
+  const currentPet = pets[index];
 
   function nextPet() {
-    if (index < shuffledPets.length - 1) {
-      setIndex((prev) => prev + 1);
-    } else {
-      setShuffledPets(shuffleArray(shuffledPets));
-      setIndex(0);
-    }
+    setIndex((i) => i + 1);
   }
 
-  function handlePass() {
+  async function swipe(type: "like" | "pass") {
+    if (!currentPet) return;
+
+    await fetch("/api/swipes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ toPetId: currentPet.id, type }),
+    });
+
     nextPet();
   }
 
-  function handleLike() {
-    nextPet();
-  }
 
-  if (!currentPet) return null;
+  if (loading) return <div className="container safe-bottom">Učitavam...</div>;
+
+  if (!currentPet) {
+    return (
+      <div className="container safe-bottom">
+        <header className="mb-4">
+          <p className="text-xs text-slate-500">📍 Belgrade</p>
+          <h1 className="text-2xl font-semibold">Find your Pawmate</h1>
+        </header>
+        <p className="text-sm text-slate-500">Nema više ljubimaca za prikaz.</p>
+      </div>
+    );
+  }
 
   return (
-   <div className="container safe-bottom">
-
+    <div className="container safe-bottom">
       <header className="mb-4">
         <p className="text-xs text-slate-500">📍 Belgrade</p>
         <h1 className="text-2xl font-semibold">Find your Pawmate</h1>
       </header>
+      <div className="relative">    {/* PetCard bez dugmadi unutra */}
+        <PetCard pet={currentPet} />
+        {/* dugmad PREKO slike */}
+        <div className="absolute inset-x-0 bottom-14 z-30 flex justify-center gap-4">
+          <button
+            className="fab"
+            onClick={() => swipe("pass")}
+            aria-label="Pass"
+          >
+            ❌
+          </button>
 
-      <PetCard pet={currentPet} />
+          <button
+            className="fab fab-primary"
+            onClick={() => swipe("like")}
+            aria-label="Like"
+          >
+            ❤️
+          </button>
+        </div></div>
 
-      <div className="-mt-6 flex justify-center gap-4">
-        <button className="fab" onClick={handlePass} aria-label="Pass">
-          ❌
-        </button>
-        <button className="fab fab-primary" onClick={handleLike} aria-label="Like">
-          ❤️
-        </button>
-      </div>
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { pet, petImages } from "@/db/schema";
 import { asc, inArray } from "drizzle-orm";
+import { requireAuth } from "@/lib/auth-server";
 
 function cleanString(x: unknown) {
   return typeof x === "string" ? x.trim() : "";
@@ -12,6 +13,8 @@ function cleanString(x: unknown) {
 
 // GET all pets (with images)
 export async function GET() {
+  const auth = await requireAuth();
+  if (!auth.ok) return auth.res;
   try {
     // 1) uzmi sve pets
     const ps = await db.select().from(pet).orderBy(asc(pet.ime)); // ili asc(pet.id)
@@ -56,9 +59,13 @@ export async function GET() {
 // CREATE pet
 // =====================
 export async function POST(req: Request) {
+  const auth = await requireAuth();
+  if (!auth.ok) return auth.res;
+
+  const vlasnikId = auth.user.id;
+
   const body = await req.json().catch(() => ({} as any));
 
-  const vlasnikId = cleanString(body?.vlasnikId);
   const ime = cleanString(body?.ime);
   const opis = cleanString(body?.opis);
   const vrsta = cleanString(body?.vrsta);
@@ -68,15 +75,13 @@ export async function POST(req: Request) {
   const grad = cleanString(body?.grad);
   const interesovanja = cleanString(body?.interesovanja);
 
-  // obavezna polja
-  if (!vlasnikId || !ime || !opis || !vrsta) {
+  if (!ime || !opis || !vrsta) {
     return NextResponse.json(
-      { error: "vlasnikId, ime, opis i vrsta su obavezni" },
+      { error: "ime, opis i vrsta su obavezni" },
       { status: 400 }
     );
   }
 
-  // validacija vrste
   if (!["dog", "cat"].includes(vrsta)) {
     return NextResponse.json(
       { error: 'vrsta mora biti "dog" ili "cat"' },
@@ -101,18 +106,15 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ pet: created ?? null }, { status: 201 });
   } catch (err: any) {
-    // ako imas UNIQUE na vlasnikId (1 user = 1 pet)
     if (err?.code === "23505") {
       return NextResponse.json(
         { error: "Korisnik vec ima kreiranog ljubimca" },
         { status: 400 }
       );
     }
-
     return NextResponse.json(
       { error: "Neuspesno kreiranje ljubimca" },
       { status: 500 }
     );
   }
 }
-

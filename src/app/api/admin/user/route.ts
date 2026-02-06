@@ -5,6 +5,7 @@ import { db } from "@/db";
 import { user } from "@/db/schema";
 import bcrypt from "bcrypt";
 import { eq } from "drizzle-orm";
+import { requireAuth } from "@/lib/auth-server";
 
 function cleanString(x: unknown) {
   return typeof x === "string" ? x.trim() : "";
@@ -12,6 +13,10 @@ function cleanString(x: unknown) {
 
 // GET /api/admin/users
 export async function GET() {
+  const auth = await requireAuth();
+  if (!auth.ok) return auth.res;
+
+  const userId = auth.user.id;
   try {
     const rows = await db
       .select({
@@ -34,7 +39,10 @@ export async function GET() {
 // POST /api/admin/users  (admin kreira usera) - prima password, pa hashira
 export async function POST(req: Request) {
   const body = await req.json().catch(() => ({} as any));
+  const auth = await requireAuth();
+  if (!auth.ok) return auth.res;
 
+  const userId = auth.user.id;
   const ime = cleanString(body?.ime);
   const prezime = cleanString(body?.prezime);
   const email = cleanString(body?.email);

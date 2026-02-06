@@ -2,11 +2,17 @@ import type { PetProfile } from "@/lib/types";
 
 export default function PetCard({ pet }: { pet: PetProfile }) {
   const firstImage = pet.images?.[0];
-
+  async function swipe(type: "like" | "pass") {
+    await fetch("/api/swipes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ toPetId: pet.id, type }),
+    });
+  }
   return (
-    <div className="card card-hover overflow-hidden">
-      {/* Hero slika (duža/portrait) */}
-      <div className="relative h-[520px] w-full bg-slate-50">
+    <div className="card card-hover">
+  <div className="relative h-[520px] w-full bg-slate-50 overflow-hidden rounded-[inherit]">
         {firstImage ? (
           <img
             src={firstImage}
@@ -51,15 +57,7 @@ export default function PetCard({ pet }: { pet: PetProfile }) {
             </div>
           )}
         </div>
-        {/* Dugmad PREKO slike */}
-        <div className="absolute -bottom-8 left-0 right-0 flex justify-center gap-4 z-10">
-          <button className="fab">
-            ❌
-          </button>
-          <button className="fab fab-primary">
-            ❤️
-          </button>
-        </div>
+      
 
       </div>
     </div>
