@@ -23,6 +23,7 @@ async function seed() {
     const anaPassHash = await bcrypt.hash("ana123", 10);
     const markoPassHash = await bcrypt.hash("marko123", 10);
     const bukiPassHash = await bcrypt.hash("Sifra123", 10);
+    const dijanaPassHash=await bcrypt.hash("dijana123",10);
 
     await db.transaction(async (tx) => {
         // 1) očisti sve (redosled zbog FK)
@@ -87,6 +88,20 @@ async function seed() {
             .returning({ id: user.id, email: user.email });
         console.log("Korisnik je kreiran: ", marko.email);
 
+        const [dijana] = await tx
+            .insert(user)
+            .values({
+                uloga:"korisnik",
+                ime:"Dijana",
+                prezime:"Novakovic",
+                email:"dijana@pawmatch.com",
+                passHash: dijanaPassHash,
+                brojTelefona: "+381641234567"
+
+            })
+            .returning({id: user.id, email:user.email});
+        console.log("Kornisnik je kreiran: ", dijana.email);
+
 
         // 3) pets
         const [rex] = await tx
@@ -145,17 +160,35 @@ async function seed() {
             })
             .returning({ id: pet.id });
 
+            const [beki] = await tx
+            .insert(pet)
+            .values({
+                vlasnikId: dijana.id,
+                ime: "Beki",
+                opis: "Razigran pas koji voli šetnje i društvo",
+                vrsta: "dog",
+                datumRodjenja: "2021-12-05",
+                pol: "male",
+                grad: "Belgrade",
+                interesovanja: "People, Fetch, Parks",
+            })
+            .returning({ id: pet.id });
+
         // 4) images
         await tx.insert(petImages).values([
-            { petId: rex.id, url: "https://picsum.photos/seed/rex1/600/800", sortOrder: 0 },
-            { petId: rex.id, url: "https://picsum.photos/seed/rex2/600/800", sortOrder: 1 },
-            { petId: luna.id, url: "https://picsum.photos/seed/dobby1/600/800", sortOrder: 0 },
-            { petId: luna.id, url: "https://picsum.photos/seed/dobby2/600/800", sortOrder: 1 },
+            { petId: rex.id, url: "/pets/rex_1.jpg", sortOrder: 0 },
+            { petId: rex.id, url: "/pets/rex_2.jpg", sortOrder: 1 },
 
-            { petId: nora.id, url: "https://picsum.photos/seed/lady1/600/800", sortOrder: 0 },
-            { petId: nora.id, url: "https://picsum.photos/seed/lady2/600/800", sortOrder: 1 },
+            { petId: luna.id, url: "/pets/luna_1.jpg", sortOrder: 0 },
+            { petId: luna.id, url: "/pets/luna_2.jpg", sortOrder: 1 },
 
-            { petId: fluff.id, url: "https://picsum.photos/seed/fluff1/600/800", sortOrder: 0 },
+            { petId: nora.id, url: "/pets/nora_1.jpg", sortOrder: 0 },
+            { petId: nora.id, url: "/pets/nora_2.jpg", sortOrder: 1 },
+
+            { petId: fluff.id, url: "/pets/fluffy_1.jpg", sortOrder: 0 },
+
+            { petId: beki.id, url: "/pets/beki_1.jpg", sortOrder: 0 },
+            { petId: beki.id, url: "/pets/beki_2.jpg", sortOrder: 1 },
         ]);
 
         // 5) swipes (napravićemo match Dobby <-> Lady)

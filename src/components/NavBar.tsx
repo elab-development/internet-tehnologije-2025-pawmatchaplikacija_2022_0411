@@ -8,7 +8,7 @@ const links = [
   { href: "/matches", label: "friends", icon: "👥" },
   { href: "/home", label: "home", icon: "🏠" },
   { href: "#", label: "chat", icon: "💬" },
-  { href: "#", label: "profile", icon: "👤" },
+  { href: "/settings", label: "profile", icon: "👤" },
 ];
 
 

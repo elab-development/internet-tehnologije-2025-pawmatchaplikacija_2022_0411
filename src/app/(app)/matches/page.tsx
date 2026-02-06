@@ -1,158 +1,81 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import MatchPetCard from "@/components/MatchPetCard";
+import Link from "next/link";
+import { useEffect, useState } from "react";
 
-const PAGE_SIZE = 4;
-const TYPE_LABELS: Record<string, string> = {
-  all: "Svi",
-  dog: "Pas",
-  cat: "Mačka",
-};
-
-type ApiMatch = {
-  match: { id: string; createdAt: string };
+type MatchItem = {
+  match: { id: string; createdAt: string | null };
+  myPetId: string;
   otherPet: {
     id: string;
     ime: string;
-    opis: string;
-    vrsta: string;
-    images: string[];
+    grad: string | null;
+    images?: string[];
   };
 };
 
 export default function MatchesPage() {
-  const [data, setData] = useState<ApiMatch[]>([]);
+  const [items, setItems] = useState<MatchItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [err, setErr] = useState("");
-
-  const [page, setPage] = useState(0);
-  const [animKey, setAnimKey] = useState(0);
-  const [type, setType] = useState<string>("all");
 
   useEffect(() => {
     (async () => {
-      setLoading(true);
-      setErr("");
-      try {
-        const res = await fetch("/api/matches", { credentials: "include" });
-        if (!res.ok) {
-          const j = await res.json().catch(() => ({}));
-          throw new Error(j?.error ?? "Greška pri učitavanju match-eva");
-        }
-        const j = await res.json();
-        setData(j.matches ?? []);
-      } catch (e: any) {
-        setErr(e.message ?? "Greška");
-      } finally {
-        setLoading(false);
-      }
+      const r = await fetch("/api/matches", { credentials: "include" });
+      const data = await r.json();
+      setItems(data.matches ?? []);
+      setLoading(false);
     })();
   }, []);
 
-  const filteredMatches = useMemo(() => {
-    if (type === "all") return data;
-    return data.filter((m) => m.otherPet.vrsta === type);
-  }, [type, data]);
-
-  const pageCount = Math.max(1, Math.ceil(filteredMatches.length / PAGE_SIZE));
-
-  const visible = useMemo(() => {
-    const start = page * PAGE_SIZE;
-    return filteredMatches.slice(start, start + PAGE_SIZE);
-  }, [page, filteredMatches]);
-
-  function nextPage() {
-    setPage((p) => (p + 1) % pageCount);
-    setAnimKey((k) => k + 1);
+  if (loading) {
+    return <div className="mx-auto max-w-[420px] px-5 pt-6">Loading...</div>;
   }
-  function prevPage() {
-    setPage((p) => (p - 1 + pageCount) % pageCount);
-    setAnimKey((k) => k + 1);
-  }
-
-  const recent = filteredMatches.slice(0, 4).map((m) => m.otherPet);
-
-  if (loading) return <div className="container min-h-screen p-4">Učitavam...</div>;
-  if (err) return <div className="container min-h-screen p-4 text-red-600">{err}</div>;
 
   return (
-    <div className="container min-h-screen">
-      <header className="mb-4">
-        <h1 className="text-xl font-semibold">Matches</h1>
-      </header>
+    <main className="mx-auto w-full max-w-[420px] px-5 pb-28 pt-6">
+      <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">Matches</h1>
 
-      {/* Recent Matches */}
-      <section className="mb-6">
-        <p className="mb-3 text-sm font-semibold">Recent Matches</p>
-        <div className="flex gap-3 overflow-x-auto pb-1">
-          {recent.map((p) => (
-            <div key={p.id} className="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-slate-100">
-              <img src={p.images?.[0]} alt={p.ime} className="h-full w-full object-cover" />
-            </div>
-          ))}
-        </div>
-      </section>
+      <div className="mt-5 space-y-3">
+        {items.map((m) => {
+          const img = m.otherPet.images?.[0];
 
-      {/* Filter */}
-      <div className="my-4">
-        <p className="mb-2 text-sm font-semibold">Vrsta ljubimca</p>
-        <div className="inline-flex rounded-2xl bg-slate-100 p-1">
-          {["all", "dog", "cat"].map((id) => (
-            <button
-              key={id}
-              onClick={() => {
-                setType(id);
-                setPage(0);
-                setAnimKey((k) => k + 1);
-              }}
-              className={`px-4 py-2 text-sm rounded-2xl transition ${
-                type === id ? "bg-white shadow-sm font-semibold" : "text-slate-600"
-              }`}
+          return (
+            <Link
+              key={m.match.id}
+              href={`/matches/${m.otherPet.id}?matchId=${m.match.id}`}
+              className="block rounded-2xl border border-slate-200 bg-white p-3 shadow-sm transition hover:shadow-md active:scale-[0.99]"
+              aria-label={`Open ${m.otherPet.ime} profile`}
             >
-              {TYPE_LABELS[id]}
-            </button>
-          ))}
-        </div>
-      </div>
+              <div className="flex items-center gap-3">
+                <div className="h-14 w-14 overflow-hidden rounded-xl bg-slate-100">
+                  {img ? (
+                    <img
+                      src={img}
+                      alt={m.otherPet.ime}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : null}
+                </div>
 
-      {/* Grid */}
-      <section className="relative">
-        <div className="mb-3 flex items-center justify-between">
-          <p className="text-sm font-semibold">
-            Your Matches <span className="text-slate-500">{filteredMatches.length}</span>
-          </p>
-          <p className="text-xs text-slate-400">
-            {page + 1}/{pageCount}
-          </p>
-        </div>
+                <div className="min-w-0">
+                  <div className="truncate text-base font-semibold text-slate-900">
+                    {m.otherPet.ime}
+                  </div>
+                  <div className="truncate text-sm text-slate-500">
+                    {m.otherPet.grad ?? "—"}
+                  </div>
+                </div>
+              </div>
+            </Link>
+          );
+        })}
 
-        <div className="relative">
-          <div key={animKey} className="grid grid-cols-2 gap-4 animate-slideIn">
-            {visible.map((m, i) => (
-              <MatchPetCard
-                key={m.match.id}
-                pet={m.otherPet}
-                distanceLabel={i % 2 === 0 ? "0.1km away" : "4km away"}
-              />
-            ))}
+        {items.length === 0 && (
+          <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 text-slate-600">
+            Nema match-eva još.
           </div>
-
-          {pageCount > 1 && (
-            <div className="pointer-events-none absolute inset-y-0 left-[-12px] right-[-12px] flex items-center justify-between">
-              <button onClick={prevPage} className="pointer-events-auto h-11 w-11 rounded-full bg-white/90 shadow-md border border-slate-200 flex items-center justify-center backdrop-blur active:scale-95 transition">
-                ‹
-              </button>
-              <button onClick={nextPage} className="pointer-events-auto h-11 w-11 rounded-full bg-white/90 shadow-md border border-slate-200 flex items-center justify-center backdrop-blur active:scale-95 transition">
-                ›
-              </button>
-            </div>
-          )}
-        </div>
-      </section>
-
-      <div className="h-[220px]" />
-    </div>
+        )}
+      </div>
+    </main>
   );
 }
-

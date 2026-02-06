@@ -1,58 +1,68 @@
 export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { and, asc, eq, or } from "drizzle-orm";
 
 import { db } from "@/db";
 import { matches, messages, pet } from "@/db/schema";
-import { AUTH_COOKIE, verifyAuthToken } from "@/lib/auth";
 import { requireAuth } from "@/lib/auth-server";
-
 
 function cleanString(x: unknown) {
   return typeof x === "string" ? x.trim() : "";
 }
 
-
-
 async function getMyPetId(userId: string) {
-  const [myPet] = await db.select({ id: pet.id }).from(pet).where(eq(pet.vlasnikId, userId));
-  return myPet?.id ?? null;
-}
-
-async function assertMatchOwnership(matchId: string, myPetId: string) {
-  const [m] = await db
-    .select({ id: matches.id, pet1Id: matches.pet1Id, pet2Id: matches.pet2Id })
-    .from(matches)
-    .where(eq(matches.id, matchId));
-
-  if (!m) return { ok: false as const, status: 404, error: "Match ne postoji" };
-  if (m.pet1Id !== myPetId && m.pet2Id !== myPetId) {
-    return { ok: false as const, status: 403, error: "Forbidden" };
-  }
-  return { ok: true as const, match: m };
+  const [row] = await db
+    .select({ id: pet.id })
+    .from(pet)
+    .where(eq(pet.vlasnikId, userId));
+  return row?.id ?? null;
 }
 
 // =====================
-// GET /api/matches/[id]/messages
+// GET /api/matches/:id/message  -> list messages
 // =====================
-export async function GET(_: Request, ctx: { params: Promise<{ id: string }> }) {
+export async function GET(
+  _: Request,
+  ctx: { params: Promise<{ id: string }> }
+) {
   const auth = await requireAuth();
   if (!auth.ok) return auth.res;
 
-  const userId = auth.user.id;
   const { id } = await ctx.params;
   const matchId = cleanString(id);
-  if (!matchId) return NextResponse.json({ error: "matchId is required" }, { status: 400 });
 
-  const myPetId = await getMyPetId(userId);
-  if (!myPetId) return NextResponse.json({ error: "Nemaš ljubimca u profilu" }, { status: 400 });
+  if (!matchId) {
+    return NextResponse.json({ error: "matchId is required" }, { status: 400 });
+  }
 
-  const own = await assertMatchOwnership(matchId, myPetId);
-  if (!own.ok) return NextResponse.json({ error: own.error }, { status: own.status });
+  const myPetId = await getMyPetId(auth.user.id);
+  if (!myPetId) {
+    return NextResponse.json(
+      { error: "Nemaš ljubimca u profilu" },
+      { status: 400 }
+    );
+  }
 
-  const rows = await db
+  // security: da ne čitaš tuđe chatove
+  const [m] = await db
+    .select({ id: matches.id })
+    .from(matches)
+    .where(
+      and(
+        eq(matches.id, matchId),
+        or(eq(matches.pet1Id, myPetId), eq(matches.pet2Id, myPetId))
+      )
+    );
+
+  if (!m) {
+    return NextResponse.json(
+      { error: "Match ne postoji ili nije tvoj" },
+      { status: 404 }
+    );
+  }
+
+  const list = await db
     .select({
       id: messages.id,
       matchId: messages.matchId,
@@ -64,36 +74,67 @@ export async function GET(_: Request, ctx: { params: Promise<{ id: string }> }) 
     .where(eq(messages.matchId, matchId))
     .orderBy(asc(messages.createdAt));
 
-  return NextResponse.json({ myPetId, messages: rows });
+  return NextResponse.json({ myPetId, messages: list }, { status: 200 });
 }
 
 // =====================
-// POST /api/matches/[id]/messages
+// POST /api/matches/:id/message  -> send message
 // body: { text: string }
 // =====================
-export async function POST(req: Request, ctx: { params: Promise<{ id: string }> }) {
+export async function POST(
+  req: Request,
+  ctx: { params: Promise<{ id: string }> }
+) {
   const auth = await requireAuth();
   if (!auth.ok) return auth.res;
 
-  const userId = auth.user.id;
-
   const { id } = await ctx.params;
   const matchId = cleanString(id);
-  if (!matchId) return NextResponse.json({ error: "matchId is required" }, { status: 400 });
 
-  const myPetId = await getMyPetId(userId);
-  if (!myPetId) return NextResponse.json({ error: "Nemaš ljubimca u profilu" }, { status: 400 });
-
-  const own = await assertMatchOwnership(matchId, myPetId);
-  if (!own.ok) return NextResponse.json({ error: own.error }, { status: own.status });
+  if (!matchId) {
+    return NextResponse.json({ error: "matchId is required" }, { status: 400 });
+  }
 
   const body = (await req.json().catch(() => null)) as null | { text?: string };
   const text = cleanString(body?.text);
-  if (!text) return NextResponse.json({ error: "text is required" }, { status: 400 });
 
-  const [created] = await db
+  if (!text) {
+    return NextResponse.json({ error: "Text is required" }, { status: 400 });
+  }
+
+  const myPetId = await getMyPetId(auth.user.id);
+  if (!myPetId) {
+    return NextResponse.json(
+      { error: "Nemaš ljubimca u profilu" },
+      { status: 400 }
+    );
+  }
+
+  // ownership match-a
+  const [m] = await db
+    .select({ id: matches.id })
+    .from(matches)
+    .where(
+      and(
+        eq(matches.id, matchId),
+        or(eq(matches.pet1Id, myPetId), eq(matches.pet2Id, myPetId))
+      )
+    );
+
+  if (!m) {
+    return NextResponse.json(
+      { error: "Match ne postoji ili nije tvoj" },
+      { status: 404 }
+    );
+  }
+
+  const [inserted] = await db
     .insert(messages)
-    .values({ matchId, senderPetId: myPetId, text })
+    .values({
+      matchId,
+      senderPetId: myPetId,
+      text,
+    })
     .returning({
       id: messages.id,
       matchId: messages.matchId,
@@ -102,5 +143,5 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
       createdAt: messages.createdAt,
     });
 
-  return NextResponse.json({ message: created }, { status: 201 });
+  return NextResponse.json({ ok: true, message: inserted }, { status: 201 });
 }

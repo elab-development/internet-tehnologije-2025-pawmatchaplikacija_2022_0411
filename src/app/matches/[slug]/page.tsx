@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
 type PetImageDto = {
@@ -23,6 +23,10 @@ type PetDto = {
 
 export default function PetDetailsPage() {
   const { slug } = useParams<{ slug: string }>();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const matchId = searchParams.get("matchId");
+
   const [pet, setPet] = useState<PetDto | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -105,11 +109,18 @@ export default function PetDetailsPage() {
               </Link>
 
               <button
-                onClick={() => alert("Poruka")}
-                className="h-14 w-14 rounded-full bg-orange-500 text-white shadow-lg flex items-center justify-center active:scale-95 transition-transform duration-150 active:brightness-110"
+                type="button"
+                onClick={() => matchId && router.push(`/chat/${matchId}`)}
+                disabled={!matchId}
+                className={[
+                      "h-14 w-14 rounded-full bg-orange-500 text-white shadow-lg flex items-center justify-center transition-transform duration-150",
+                        "active:scale-95 active:brightness-110",
+                      !matchId ? "opacity-50 pointer-events-none" : "",
+                ].join(" ")}
               >
                 💬
               </button>
+
             </div>
           </div>
         </div>
