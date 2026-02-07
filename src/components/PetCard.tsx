@@ -1,7 +1,10 @@
 import type { PetProfile } from "@/lib/types";
 
 export default function PetCard({ pet }: { pet: PetProfile }) {
-  const firstImage = pet.images?.[0];
+  const firstImage =
+    typeof pet.images?.[0] === "string"
+      ? (pet.images?.[0] as string)
+      : (pet.images?.[0] as any)?.url;
   async function swipe(type: "like" | "pass") {
     await fetch("/api/swipes", {
       method: "POST",
@@ -12,7 +15,7 @@ export default function PetCard({ pet }: { pet: PetProfile }) {
   }
   return (
     <div className="card card-hover">
-  <div className="relative h-[520px] w-full bg-slate-50 overflow-hidden rounded-[inherit]">
+      <div className="relative h-[520px] w-full bg-slate-50 overflow-hidden rounded-[inherit]">
         {firstImage ? (
           <img
             src={firstImage}
@@ -57,7 +60,7 @@ export default function PetCard({ pet }: { pet: PetProfile }) {
             </div>
           )}
         </div>
-      
+
 
       </div>
     </div>

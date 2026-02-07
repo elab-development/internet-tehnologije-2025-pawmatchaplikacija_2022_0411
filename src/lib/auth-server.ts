@@ -3,10 +3,11 @@ import { NextResponse } from "next/server";
 import { AUTH_COOKIE, verifyAuthToken } from "@/lib/auth";
 
 export type JwtUserClaims = {
-  id: string;
-  email?: string;
-  name?: string;
-  role?: string;
+ id: string;
+  email: string;
+  ime?: string;
+  prezime?: string;
+  uloga?: string;
 };
 
 // =====================
@@ -49,7 +50,7 @@ export async function requireAdmin(): Promise<
   if (!auth.ok) return auth;
 
   // drugo: da li je admin
-  if (auth.user.role !== "admin") {
+  if (auth.user.uloga !== "admin") {
     return {
       ok: false,
       res: NextResponse.json({ error: "Forbidden" }, { status: 403 }),

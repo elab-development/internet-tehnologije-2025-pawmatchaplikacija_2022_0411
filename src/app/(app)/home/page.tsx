@@ -39,11 +39,28 @@ export default function Home() {
 
 
   const currentPet = pets[index];
-
+  useEffect(() => { //
+    if (index >= pets.length && pets.length > 0) {
+      setIndex(0);
+    }
+  }, [index, pets.length]);
   function nextPet() {
     setIndex((i) => i + 1);
   }
 
+
+  /* async function swipe(type: "like" | "pass") {
+     if (!currentPet) return;
+ 
+     await fetch("/api/swipes", {
+       method: "POST",
+       headers: { "Content-Type": "application/json" },
+       credentials: "include",
+       body: JSON.stringify({ toPetId: currentPet.id, type }),
+     });
+ 
+     nextPet();
+   }*/
   async function swipe(type: "like" | "pass") {
     if (!currentPet) return;
 
@@ -54,7 +71,14 @@ export default function Home() {
       body: JSON.stringify({ toPetId: currentPet.id, type }),
     });
 
-    nextPet();
+    if (type === "like") {
+      // ❤️ izbaci currentPet iz liste
+      setPets((prev) => prev.filter((p) => p.id !== currentPet.id));
+      // NE POMERAJ index
+    } else {
+      // ❌ samo idi dalje
+      nextPet();
+    }
   }
 
 
@@ -70,6 +94,7 @@ export default function Home() {
         <p className="text-sm text-slate-500">Nema više ljubimaca za prikaz.</p>
       </div>
     );
+
   }
 
   return (
@@ -81,7 +106,7 @@ export default function Home() {
       <div className="relative">    {/* PetCard bez dugmadi unutra */}
         <PetCard pet={currentPet} />
         {/* dugmad PREKO slike */}
-        <div className="absolute inset-x-0 bottom-14 z-30 flex justify-center gap-4">
+        <div className="absolute inset-x-0 bottom-6 z-30 flex justify-center gap-4">
           <button
             className="fab"
             onClick={() => swipe("pass")}

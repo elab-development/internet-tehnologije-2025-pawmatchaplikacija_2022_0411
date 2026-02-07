@@ -36,8 +36,8 @@ export function verifyAuthToken(token: string): JwtUserClaims {
   if (!id || !email) throw new Error("invalid token");
 
   return {
-    id,
-    email,
+    id:payload.id ?? payload.sub,
+    email:payload.email,
     ime: payload.ime ?? payload.name,
     prezime: payload.prezime,
     uloga: payload.uloga ?? payload.role,

@@ -23,7 +23,12 @@ async function seed() {
     const anaPassHash = await bcrypt.hash("ana123", 10);
     const markoPassHash = await bcrypt.hash("marko123", 10);
     const bukiPassHash = await bcrypt.hash("Sifra123", 10);
-    const dijanaPassHash=await bcrypt.hash("dijana123",10);
+    const dijanaPassHash = await bcrypt.hash("dijana123", 10);
+    const milicaPassHash = await bcrypt.hash("milica123", 10);
+    const stefanPassHash = await bcrypt.hash("stefan123", 10);
+    const ivanaPassHash = await bcrypt.hash("ivana123", 10);
+    const nikolaPassHash = await bcrypt.hash("nikola123", 10);
+
 
     await db.transaction(async (tx) => {
         // 1) očisti sve (redosled zbog FK)
@@ -91,17 +96,68 @@ async function seed() {
         const [dijana] = await tx
             .insert(user)
             .values({
-                uloga:"korisnik",
-                ime:"Dijana",
-                prezime:"Novakovic",
-                email:"dijana@pawmatch.com",
+                uloga: "korisnik",
+                ime: "Dijana",
+                prezime: "Novakovic",
+                email: "dijana@pawmatch.com",
                 passHash: dijanaPassHash,
                 brojTelefona: "+381641234567"
 
             })
-            .returning({id: user.id, email:user.email});
+            .returning({ id: user.id, email: user.email });
         console.log("Kornisnik je kreiran: ", dijana.email);
 
+        const [milica] = await tx
+            .insert(user)
+            .values({
+                uloga: "korisnik",
+                ime: "Milica",
+                prezime: "Milosevic",
+                email: "milica@pawmatch.com",
+                passHash: milicaPassHash,
+                brojTelefona: "+381641110001",
+            })
+            .returning({ id: user.id, email: user.email });
+        console.log("Korisnik je kreiran: ", milica.email);
+
+        const [stefan] = await tx
+            .insert(user)
+            .values({
+                uloga: "korisnik",
+                ime: "Stefan",
+                prezime: "Ilic",
+                email: "stefan@pawmatch.com",
+                passHash: stefanPassHash,
+                brojTelefona: "+381641110002",
+            })
+            .returning({ id: user.id, email: user.email });
+        console.log("Korisnik je kreiran: ", stefan.email);
+
+        const [ivana] = await tx
+            .insert(user)
+            .values({
+                uloga: "korisnik",
+                ime: "Ivana",
+                prezime: "Stojanovic",
+                email: "ivana@pawmatch.com",
+                passHash: ivanaPassHash,
+                brojTelefona: "+381641110003",
+            })
+            .returning({ id: user.id, email: user.email });
+        console.log("Korisnik je kreiran: ", ivana.email);
+
+        const [nikola] = await tx
+            .insert(user)
+            .values({
+                uloga: "korisnik",
+                ime: "Nikola",
+                prezime: "Jankovic",
+                email: "nikola@pawmatch.com",
+                passHash: nikolaPassHash,
+                brojTelefona: "+381641110004",
+            })
+            .returning({ id: user.id, email: user.email });
+        console.log("Korisnik je kreiran: ", nikola.email);
 
         // 3) pets
         const [rex] = await tx
@@ -160,7 +216,7 @@ async function seed() {
             })
             .returning({ id: pet.id });
 
-            const [beki] = await tx
+        const [beki] = await tx
             .insert(pet)
             .values({
                 vlasnikId: dijana.id,
@@ -171,6 +227,61 @@ async function seed() {
                 pol: "male",
                 grad: "Belgrade",
                 interesovanja: "People, Fetch, Parks",
+            })
+            .returning({ id: pet.id });
+        const [miki] = await tx
+            .insert(pet)
+            .values({
+                vlasnikId: milica.id,
+                ime: "Miki",
+                opis: "Veseo pas koji obožava lopticu i duge šetnje.",
+                vrsta: "dog",
+                datumRodjenja: "2022-08-20",
+                pol: "male",
+                grad: "Belgrade",
+                interesovanja: "Fetch, Long walks, Treats",
+            })
+            .returning({ id: pet.id });
+
+        const [kiki] = await tx
+            .insert(pet)
+            .values({
+                vlasnikId: stefan.id,
+                ime: "Kiki",
+                opis: "Radoznala mačka, voli da istražuje i da se mazi kad se opusti.",
+                vrsta: "cat",
+                datumRodjenja: "2021-03-12",
+                pol: "female",
+                grad: "Belgrade",
+                interesovanja: "Sunbathing, Toys, Exploring",
+            })
+            .returning({ id: pet.id });
+
+        const [argo] = await tx
+            .insert(pet)
+            .values({
+                vlasnikId: ivana.id,
+                ime: "Argo",
+                opis: "Mirniji pas, super za društvo i lagane šetnje po kraju.",
+                vrsta: "dog",
+                datumRodjenja: "2020-11-02",
+                pol: "male",
+                grad: "Belgrade",
+                interesovanja: "Chill walks, People, Parks",
+            })
+            .returning({ id: pet.id });
+
+        const [mila] = await tx
+            .insert(pet)
+            .values({
+                vlasnikId: nikola.id,
+                ime: "Mila",
+                opis: "Druželjubiva maca, voli pažnju i da se igra kanapom.",
+                vrsta: "cat",
+                datumRodjenja: "2022-05-30",
+                pol: "female",
+                grad: "Belgrade",
+                interesovanja: "String toys, Cuddles, Window watching",
             })
             .returning({ id: pet.id });
 
@@ -189,6 +300,11 @@ async function seed() {
 
             { petId: beki.id, url: "/pets/beki_1.jpg", sortOrder: 0 },
             { petId: beki.id, url: "/pets/beki_2.jpg", sortOrder: 1 },
+
+            { petId: argo.id, url: "/pets/argo.jpg", sortOrder: 0 },
+            { petId: kiki.id, url: "/pets/kiki.jpg", sortOrder: 0 },
+            { petId: miki.id, url: "/pets/miki.jpg", sortOrder: 0 },
+            { petId: mila.id, url: "/pets/Mila.jpg", sortOrder: 0 }
         ]);
 
         // 5) swipes (napravićemo match Dobby <-> Lady)
@@ -203,6 +319,43 @@ async function seed() {
             { fromPetId: nora.id, toPetId: fluff.id, type: "pass" },
             { fromPetId: fluff.id, toPetId: nora.id, type: "like" },
         ]);
+        // AUTO-MATCH: napravi matches za sve uzajamne like parove iz swipes
+        const likes = await tx
+            .select({ from: swipes.fromPetId, to: swipes.toPetId })
+            .from(swipes)
+            .where(eq(swipes.type, "like"));
+
+        const likeSet = new Set(likes.map((x) => `${x.from}->${x.to}`));
+
+        const pairs = new Set<string>();
+
+        for (const l of likes) {
+            if (likeSet.has(`${l.to}->${l.from}`)) {
+                const [p1, p2] = sortPair(l.from, l.to);
+                pairs.add(`${p1}|${p2}`);
+            }
+        }
+        if (pairs.size) {
+            await tx
+                .insert(matches)
+                .values(
+                    Array.from(pairs).map((k) => {
+                        const [pet1Id, pet2Id] = k.split("|");
+                        return { pet1Id, pet2Id };
+                    })
+                )
+                .onConflictDoNothing();
+        }
+
+
+        if (pairs.size) {
+            await tx.insert(matches).values(
+                Array.from(pairs).map((k) => {
+                    const [pet1Id, pet2Id] = k.split("|");
+                    return { pet1Id, pet2Id };
+                })
+            ).onConflictDoNothing();
+        }
 
 
         // 6) match (OBAVEZNO sortiranje para)

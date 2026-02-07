@@ -11,12 +11,15 @@ import { AUTH_COOKIE, verifyAuthToken } from "@/lib/auth";
 export async function GET() {
   // 1) auth (isto kao kod tebe)
   const token = (await cookies()).get(AUTH_COOKIE)?.value;
+  console.log("DISCOVER token exists:", Boolean(token));
+
   if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  let userId: string;
-  try {
-    userId = verifyAuthToken(token).id;
-  } catch {
+  const claims = verifyAuthToken(token) as any;
+  const userId: string | undefined = claims.id ?? claims.sub;
+console.log("DISCOVER claims:", claims);
+console.log("DISCOVER userId:", userId);
+  if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -29,6 +32,7 @@ export async function GET() {
   if (!myPet) {
     return NextResponse.json({ pets: [] }, { status: 200 });
   }
+console.log("DISCOVER myPet:", myPet);
 
   const myPetId = myPet.id;
 
@@ -36,7 +40,7 @@ export async function GET() {
   const swipedRows = await db
     .select({ toPetId: swipes.toPetId })
     .from(swipes)
-    .where(eq(swipes.fromPetId, myPetId));
+    .where(and(eq(swipes.fromPetId, myPetId), eq(swipes.type, "like")));
 
   const swipedToIds = Array.from(new Set(swipedRows.map((s) => s.toPetId)));
 
@@ -52,6 +56,7 @@ export async function GET() {
 
   // 5) exclude lista: moj pet + swipeovani + matchovani
   const excluded = Array.from(new Set([myPetId, ...swipedToIds, ...matchedOtherIds]));
+console.log("DISCOVER excluded:", excluded);
 
   // 6) kandidati = svi ostali pets, minus excluded
   const others = await db
@@ -72,6 +77,7 @@ export async function GET() {
         excluded.length ? notInArray(pet.id, excluded) : undefined
       )
     );
+    console.log("DISCOVER others count:", others.length);
 
   return NextResponse.json({ pets: await buildPetsWithImages(others) }, { status: 200 });
 }
@@ -99,9 +105,9 @@ async function buildPetsWithImages(others: any[]) {
     images: map.get(p.id) ?? [],
     interesovanja: p.interesovanja
       ? String(p.interesovanja)
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean)
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)
       : [],
   }));
 }

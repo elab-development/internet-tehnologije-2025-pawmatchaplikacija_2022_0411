@@ -7,7 +7,7 @@ const links = [
   { href: "#", label: "discover", icon: "🧭" },
   { href: "/matches", label: "friends", icon: "👥" },
   { href: "/home", label: "home", icon: "🏠" },
-  { href: "#", label: "chat", icon: "💬" },
+  { href: "/chat", label: "chat", icon: "💬" },
   { href: "/settings", label: "profile", icon: "👤" },
 ];
 

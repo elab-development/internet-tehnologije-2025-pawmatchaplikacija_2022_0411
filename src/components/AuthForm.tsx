@@ -14,7 +14,7 @@ export default function AuthForm({ mode }: { mode: Mode }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPwd, setShowPwd] = useState(false);
-  
+
 
   // register-only
   const [ime, setIme] = useState("");
@@ -60,12 +60,12 @@ export default function AuthForm({ mode }: { mode: Mode }) {
       const body = isLogin
         ? { email: email.trim(), password }
         : {
-            ime: ime.trim(),
-            prezime: prezime.trim(),
-            email: email.trim(),
-            password,
-            brojTelefona: brojTelefona.trim(),
-          };
+          ime: ime.trim(),
+          prezime: prezime.trim(),
+          email: email.trim(),
+          password,
+          brojTelefona: brojTelefona.trim(),
+        };
 
       const res = await fetch(endpoint, {
         method: "POST",
@@ -79,13 +79,15 @@ export default function AuthForm({ mode }: { mode: Mode }) {
         try {
           const data = await res.json();
           message = data?.error ?? message;
-        } catch {}
+        } catch { }
         setErr(message);
         return;
       }
 
       router.refresh();
-      router.push("/matches");
+      if (isLogin) router.push("/matches");
+      else router.push("register/pet");
+
     } finally {
       setLoading(false);
     }

@@ -21,6 +21,8 @@ export default function ChatPage() {
   const [err, setErr] = useState<string>("");
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
+  const [otherName, setOtherName] = useState<string>("Chat");//
+  const [otherAvatar, setOtherAvatar] = useState<string | null>(null);//
 
   const apiUrl = useMemo(() => {
     if (!matchId) return "";
@@ -42,6 +44,9 @@ export default function ChatPage() {
       }
 
       const data = JSON.parse(raw);
+      setOtherName(data?.otherPet?.ime ?? "Chat");//
+      setOtherAvatar(data?.otherPet?.avatar ?? null);//
+
       setMyPetId(data.myPetId ?? null);
       setMessages(Array.isArray(data.messages) ? data.messages : []);
     } catch (e: any) {
@@ -106,7 +111,19 @@ export default function ChatPage() {
         >
           ←
         </button>
-        <h1 className="text-lg font-semibold">Chat</h1>
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 overflow-hidden rounded-full bg-slate-100">
+            {otherAvatar ? (
+              <img src={otherAvatar} alt={otherName} className="h-full w-full object-cover" />
+            ) : (
+              <div className="h-full w-full grid place-items-center">🐾</div>
+            )}
+          </div>
+
+          <h1 className="text-lg font-semibold">{otherName}</h1>
+        </div>
+
+        {/* <h1 className="text-lg font-semibold">Chat</h1>*/}
       </div>
 
       {loading && <p className="mt-6 text-slate-500">Učitavam poruke...</p>}
@@ -123,11 +140,10 @@ export default function ChatPage() {
             return (
               <div
                 key={m.id}
-                className={`max-w-[75%] rounded-2xl px-4 py-2 text-sm ${
-                  mine
-                    ? "ml-auto bg-orange-500 text-white"
-                    : "bg-slate-100 text-slate-800"
-                }`}
+                className={`max-w-[75%] rounded-2xl px-4 py-2 text-sm ${mine
+                  ? "ml-auto bg-orange-500 text-white"
+                  : "bg-slate-100 text-slate-800"
+                  }`}
               >
                 {m.text}
               </div>

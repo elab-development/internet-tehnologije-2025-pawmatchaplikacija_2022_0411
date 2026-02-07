@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 import { and, asc, eq, or } from "drizzle-orm";
 
 import { db } from "@/db";
-import { matches, messages, pet } from "@/db/schema";
+import { matches, messages, pet, petImages } from "@/db/schema";
 import { requireAuth } from "@/lib/auth-server";
 
 function cleanString(x: unknown) {
@@ -45,7 +45,7 @@ export async function GET(
   }
 
   // security: da ne čitaš tuđe chatove
-  const [m] = await db
+  /*const [m] = await db
     .select({ id: matches.id })
     .from(matches)
     .where(
@@ -53,7 +53,43 @@ export async function GET(
         eq(matches.id, matchId),
         or(eq(matches.pet1Id, myPetId), eq(matches.pet2Id, myPetId))
       )
+    );*/
+  const [m] = await db
+    .select({
+      id: matches.id,
+      pet1Id: matches.pet1Id,
+      pet2Id: matches.pet2Id,
+    })
+    .from(matches)
+    .where(
+      and(
+        eq(matches.id, matchId),
+        or(eq(matches.pet1Id, myPetId), eq(matches.pet2Id, myPetId))
+      )
     );
+  const otherPetId = m.pet1Id === myPetId ? m.pet2Id : m.pet1Id;
+
+  const [other] = await db
+    .select({
+      id: pet.id,
+      ime: pet.ime,
+    })
+    .from(pet)
+    .where(eq(pet.id, otherPetId));//
+
+  const [avatarRow] = await db
+    .select({ url: petImages.url })
+    .from(petImages)
+    .where(eq(petImages.petId, otherPetId))
+    .orderBy(asc(petImages.sortOrder))
+    .limit(1);
+
+  const otherPet = {
+    id: otherPetId,
+    ime: other?.ime ?? "Chat",
+    avatar: avatarRow?.url ?? null,
+  };
+
 
   if (!m) {
     return NextResponse.json(
@@ -73,8 +109,9 @@ export async function GET(
     .from(messages)
     .where(eq(messages.matchId, matchId))
     .orderBy(asc(messages.createdAt));
+  return NextResponse.json({ myPetId, otherPet, messages: list }, { status: 200 });
 
-  return NextResponse.json({ myPetId, messages: list }, { status: 200 });
+  // return NextResponse.json({ myPetId, messages: list }, { status: 200 });
 }
 
 // =====================

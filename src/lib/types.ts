@@ -25,6 +25,7 @@ export type Pet = {
   pol?: "male" | "female" | null;
   grad?: string | null;
   interesovanja?: string[]; // u UI kao niz
+  images?: PetImage[];
 };
 
 export type PetImage = {

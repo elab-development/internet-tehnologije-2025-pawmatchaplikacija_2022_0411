@@ -6,16 +6,15 @@ import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
-export { NextResponse } from "next/server";
 
 // ===== REGEX VALIDACIJE =====
 const nameRegex = /^[A-Za-zÀ-ÖØ-öø-ÿČĆŽŠĐčćžšđ\s'-]{2,100}$/;
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-const phoneRegex =/^[0-9]{6,15}$/;
+const phoneRegex = /^[0-9]{6,15}$/;
 
-const passwordRegex =/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
+const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
 
 type Body = { //tip podataka u parametrima
     ime: string;
@@ -115,7 +114,8 @@ export async function POST(req: Request) { //zato sto kreiramo neki obj koji je 
     const token = signAuthToken({ //napravili u okviru auth fajla, importujemo ovu funkciju
         id: u.id,                     // OBAVEZNO
         email: u.email,                // OBAVEZNO
-        ime: `${u.ime} ${u.prezime}`, // opciono
+        ime: u.ime,
+        prezime: u.prezime, // opciono
         uloga: u.uloga,
     });
 
