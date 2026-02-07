@@ -28,6 +28,7 @@ async function seed() {
     const stefanPassHash = await bcrypt.hash("stefan123", 10);
     const ivanaPassHash = await bcrypt.hash("ivana123", 10);
     const nikolaPassHash = await bcrypt.hash("nikola123", 10);
+     const testPassHash= await bcrypt.hash("test123", 10);
 
 
     await db.transaction(async (tx) => {
@@ -79,6 +80,19 @@ async function seed() {
             })
             .returning({ id: user.id, email: user.email });
         console.log("Korisnik je kreiran: ", ana.email);
+
+         const [test] = await tx
+            .insert(user)
+            .values({
+                uloga: "korisnik",
+                ime: "test",
+                prezime: "testic",
+                email: "test@pawmatch.com",
+                passHash: testPassHash,
+                brojTelefona: "+38164123456",
+            })
+            .returning({ id: user.id, email: user.email });
+        console.log("Korisnik je kreiran: ", test.email);
 
         const [marko] = await tx
             .insert(user)
@@ -165,6 +179,20 @@ async function seed() {
             .values({
                 vlasnikId: buki.id,
                 ime: "Rex",
+                opis: "Energičan pas, voli trčanje i igru.",
+                vrsta: "dog",
+                datumRodjenja: "2021-06-15",
+                pol: "male",
+                grad: "Belgrade",
+                interesovanja: "Running, Playing fetch",
+            })
+            .returning({ id: pet.id });
+
+               const [tesla] = await tx
+            .insert(pet)
+            .values({
+                vlasnikId: test.id,
+                ime: "tesla",
                 opis: "Energičan pas, voli trčanje i igru.",
                 vrsta: "dog",
                 datumRodjenja: "2021-06-15",

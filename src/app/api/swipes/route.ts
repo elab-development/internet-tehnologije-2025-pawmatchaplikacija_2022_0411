@@ -41,9 +41,9 @@ async function getMyPetId(userId: string) {
 // =====================
 export async function GET(req: Request) {
   const auth = await requireAuth();
-if (!auth.ok) return auth.res;
+  if (!auth.ok) return auth.res;
 
-const userId = auth.user.id;
+  const userId = auth.user.id;
 
   const myPetId = await getMyPetId(userId);
   if (!myPetId) {
@@ -151,7 +151,15 @@ export async function POST(req: Request) {
   }
 
   // 5) upiši swipe (unique index sprečava dupliranje)
-  await db.insert(swipes).values({ fromPetId, toPetId, type }).onConflictDoNothing();
+  // await db.insert(swipes).values({ fromPetId, toPetId, type }).onConflictDoNothing();
+  // 5) upiši swipe (ako već postoji za isti par, update-uj type)
+  await db
+    .insert(swipes)
+    .values({ fromPetId, toPetId, type })
+    .onConflictDoUpdate({
+      target: [swipes.fromPetId, swipes.toPetId], // jer imaš unique index na ova 2
+      set: { type },
+    });
 
   // 6) ako je like, proveri obrnuti like → napravi match
   let matched = false;

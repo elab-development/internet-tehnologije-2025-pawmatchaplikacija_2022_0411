@@ -17,6 +17,8 @@ type MeResponse = {
 export default function SettingsPage() {
   const router = useRouter();
   const [name, setName] = useState<string>("");
+  const [uloga, setUloga] = useState<string>("");
+
 
   useEffect(() => {
     async function loadMe() {
@@ -29,6 +31,8 @@ export default function SettingsPage() {
 
       const data: MeResponse = await res.json();
       setName(`${data.user.ime} ${data.user.prezime}`);
+      setUloga(data.user.uloga);
+
     }
 
     loadMe();
@@ -63,8 +67,13 @@ export default function SettingsPage() {
       </h2>
 
       <div className="mt-6 divide-y divide-slate-200 rounded-2xl border border-slate-200 bg-white">
+         <Row label="Account Settings" href="settings/account" />
         <Row label="Profile Settings" href="#" />
         <Row label="Terms and Conditions" href="#" />
+
+        {uloga === "admin" && (
+          <Row label="Admin panel – Users" href="/admin/users" />
+        )}
         <Row label="Delete Account" href="#" danger />
       </div>
 
