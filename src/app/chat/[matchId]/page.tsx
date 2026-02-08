@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 type MessageDto = {
@@ -21,44 +21,88 @@ export default function ChatPage() {
   const [err, setErr] = useState<string>("");
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
-  const [otherName, setOtherName] = useState<string>("Chat");//
-  const [otherAvatar, setOtherAvatar] = useState<string | null>(null);//
+  const [otherName, setOtherName] = useState<string>("Chat");
+  const [otherAvatar, setOtherAvatar] = useState<string | null>(null);
+
+  // ✅ NOVO: signature da ne radimo setState ako nema promena
+  const sigRef = useRef<string>("");
+  // ✅ NOVO: autoscroll anchor
+  const bottomRef = useRef<HTMLDivElement | null>(null);
 
   const apiUrl = useMemo(() => {
     if (!matchId) return "";
     return `/api/matches/${matchId}/message`;
   }, [matchId]);
 
-  async function load() {
+  function scrollToBottom() {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }
+
+  async function load(isBackground = false) {
     if (!apiUrl) return;
-    setLoading(true);
-    setErr("");
+
+    if (!isBackground) setLoading(true);
+    if (!isBackground) setErr("");
 
     try {
-      const res = await fetch(apiUrl, { credentials: "include" });
+      const res = await fetch(apiUrl, {
+        credentials: "include",
+        cache: "no-store", // ✅ NOVO
+      });
       const raw = await res.text();
 
       if (!res.ok) {
-        setErr(`HTTP ${res.status} – ${raw.slice(0, 200)}`);
+        if (!isBackground) setErr(`HTTP ${res.status} – ${raw.slice(0, 200)}`);
         return;
       }
 
       const data = JSON.parse(raw);
-      setOtherName(data?.otherPet?.ime ?? "Chat");//
-      setOtherAvatar(data?.otherPet?.avatar ?? null);//
 
-      setMyPetId(data.myPetId ?? null);
-      setMessages(Array.isArray(data.messages) ? data.messages : []);
+      // meta
+      const nextOtherName = data?.otherPet?.ime ?? "Chat";
+      const nextOtherAvatar = data?.otherPet?.avatar ?? null;
+      const nextMyPetId = data?.myPetId ?? null;
+
+      // messages
+      const nextMessages: MessageDto[] = Array.isArray(data.messages)
+        ? data.messages
+        : [];
+
+      // ✅ NOVO: signature (poslednja poruka je dovoljna)
+      const last = nextMessages[nextMessages.length - 1];
+      const nextSig = `${last?.id ?? ""}|${last?.createdAt ?? ""}|${
+        last?.text ?? ""
+      }|${nextMessages.length}`;
+
+      // update meta (ovo može i bez sig-a)
+      setOtherName(nextOtherName);
+      setOtherAvatar(nextOtherAvatar);
+      setMyPetId(nextMyPetId);
+
+      // update messages samo ako ima promene
+      if (nextSig !== sigRef.current) {
+        sigRef.current = nextSig;
+        setMessages(nextMessages);
+
+        // ✅ NOVO: skroluj dole kad dođe novo
+        // (malo odloži da DOM stigne da se nacrta)
+        setTimeout(scrollToBottom, 0);
+      }
     } catch (e: any) {
-      setErr(e?.message ?? "Fetch error");
+      if (!isBackground) setErr(e?.message ?? "Fetch error");
     } finally {
-      setLoading(false);
+      if (!isBackground) setLoading(false);
     }
   }
 
   useEffect(() => {
     if (!matchId) return;
-    load();
+
+    load(false);
+
+    // ✅ NOVO: polling (pozadinski)
+    const t = setInterval(() => load(true), 900); // probaj 700-1000ms
+    return () => clearInterval(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [matchId]);
 
@@ -84,15 +128,24 @@ export default function ChatPage() {
       }
 
       const data = JSON.parse(raw);
-      const msg = data?.message;
+      const msg = data?.message as MessageDto | undefined;
+
+      setText("");
 
       if (msg?.id) {
-        setMessages((prev) => [...prev, msg]);
-        setText("");
+        setMessages((prev) => {
+          // ✅ spreči dupliranje ako polling u međuvremenu povuče isto
+          if (prev.some((x) => x.id === msg.id)) return prev;
+          const next = [...prev, msg];
+          // update sig odmah
+          sigRef.current = `${msg.id}|${msg.createdAt}|${msg.text}|${next.length}`;
+          return next;
+        });
+
+        // ✅ skrol odmah
+        setTimeout(scrollToBottom, 0);
       } else {
-        // fallback: refetch
-        await load();
-        setText("");
+        await load(true);
       }
     } catch (e: any) {
       setErr(e?.message ?? "Send error");
@@ -111,10 +164,15 @@ export default function ChatPage() {
         >
           ←
         </button>
+
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 overflow-hidden rounded-full bg-slate-100">
             {otherAvatar ? (
-              <img src={otherAvatar} alt={otherName} className="h-full w-full object-cover" />
+              <img
+                src={otherAvatar}
+                alt={otherName}
+                className="h-full w-full object-cover"
+              />
             ) : (
               <div className="h-full w-full grid place-items-center">🐾</div>
             )}
@@ -122,8 +180,6 @@ export default function ChatPage() {
 
           <h1 className="text-lg font-semibold">{otherName}</h1>
         </div>
-
-        {/* <h1 className="text-lg font-semibold">Chat</h1>*/}
       </div>
 
       {loading && <p className="mt-6 text-slate-500">Učitavam poruke...</p>}
@@ -140,15 +196,19 @@ export default function ChatPage() {
             return (
               <div
                 key={m.id}
-                className={`max-w-[75%] rounded-2xl px-4 py-2 text-sm ${mine
-                  ? "ml-auto bg-orange-500 text-white"
-                  : "bg-slate-100 text-slate-800"
-                  }`}
+                className={`max-w-[75%] rounded-2xl px-4 py-2 text-sm ${
+                  mine
+                    ? "ml-auto bg-orange-500 text-white"
+                    : "bg-slate-100 text-slate-800"
+                }`}
               >
                 {m.text}
               </div>
             );
           })}
+
+          {/* ✅ NOVO: scroll anchor */}
+          <div ref={bottomRef} />
         </div>
       )}
 

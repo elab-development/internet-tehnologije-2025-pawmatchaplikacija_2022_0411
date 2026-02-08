@@ -133,14 +133,19 @@ export default function AccountSettingsForm() {
 
 
   // ----- styles (kopirano iz tvog AuthForm) -----
-  const page: React.CSSProperties = {
+  /*const page: React.CSSProperties = {
     minHeight: "100vh",
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#ffffff",
     padding: "16px 16px 120px 16px",
+  };*/
+  const page: React.CSSProperties = {
+    minHeight: "100vh",
+    backgroundColor: "#ffffff",
   };
+
 
   const card: React.CSSProperties = {
     width: "100%",
@@ -218,29 +223,52 @@ export default function AccountSettingsForm() {
   }
 
   return (
-    <main style={page}>
-      <div style={card}>
-        {/* Header */}
-        <div style={{ marginBottom: 14 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-            <Link
-              href="/settings"
+    <main
+      style={{
+        minHeight: "100vh",
+        backgroundColor: "#ffffff",
+        padding: "16px 16px 180px 16px", // bottom zbog navbar-a
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "flex-start", // bitno: da ne centrira vertikalno
+      }}
+    >
+      <div style={{ width: "100%", maxWidth: 380 }}>
+        {/* STICKY HEADER (na vrhu stranice) */}
+        <div
+          style={{
+            position: "sticky",
+            top: 0,
+            zIndex: 50,
+            background: "#fff",
+            paddingTop: 6,
+            paddingBottom: 10,
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
+            <button
+              type="button"
+              onClick={() => router.back()}
               style={{
-                width: 34,
-                height: 34,
+                width: 36,
+                height: 36,
                 borderRadius: 999,
                 border: "1px solid #e5e7eb",
+                background: "#fff",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                textDecoration: "none",
+
+                cursor: "pointer",
                 color: "#111827",
+                flex: "0 0 auto",
               }}
               aria-label="Back"
             >
               ←
-            </Link>
-            <div style={{ fontSize: 20, fontWeight: 900, color: "#111827" }}>
+            </button>
+
+            <div style={{ fontSize: 20, fontWeight: 900, color: "#111827", lineHeight: 1.1 }}>
               Account Settings
             </div>
           </div>
@@ -251,10 +279,15 @@ export default function AccountSettingsForm() {
           <div style={{ fontSize: 13, color: "#6b7280", lineHeight: 1.35 }}>
             You can edit your profile info anytime.
           </div>
+
+          <div style={{ height: 1, background: "#e5e7eb", marginTop: 12 }} />
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        {/* PAGE CONTENT (bez overflowY, znači browser scroll) */}
+        <form
+          onSubmit={handleSubmit}
+          style={{ display: "flex", flexDirection: "column", gap: 14, paddingTop: 14 }}
+        >
           <div style={twoCols}>
             <div style={field}>
               <div style={label}>First name</div>
@@ -286,16 +319,6 @@ export default function AccountSettingsForm() {
               style={inputBase}
             />
           </div>
-          {/*div style={field}>
-            <div style={label}>Current password</div>
-            <input
-              type="password"
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-              placeholder="Current password"
-              style={inputBase}
-            />
-          </div>*/}
 
           <div style={field}>
             <div style={label}>New password</div>
@@ -329,7 +352,6 @@ export default function AccountSettingsForm() {
             </div>
           </div>
 
-
           <div style={field}>
             <div style={label}>Re-enter new password</div>
             <div style={{ position: "relative" }}>
@@ -362,16 +384,19 @@ export default function AccountSettingsForm() {
             </div>
           </div>
 
-
-
           {err && <div style={errorBox}>{err}</div>}
           {okMsg && <div style={okBox}>{okMsg}</div>}
 
           <button type="submit" disabled={loading || !canSubmit} style={btn}>
             {loading ? "Saving..." : "Save"}
           </button>
+
+          <div style={{ height: 120 }} />
         </form>
       </div>
     </main>
   );
+
+
+
 }

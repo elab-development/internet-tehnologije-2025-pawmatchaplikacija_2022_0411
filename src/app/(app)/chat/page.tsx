@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type ChatItem = {
   matchId: string;
@@ -30,30 +30,56 @@ export default function ChatInboxPage() {
   const [err, setErr] = useState("");
   const [chats, setChats] = useState<ChatItem[]>([]);
 
-  async function load() {
-    setLoading(true);
-    setErr("");
+  // ✅ NOVO: da ne setujemo state ako nema promena (sprečava flicker)
+  const sigRef = useRef<string>("");
+
+  async function load(isBackground = false) {
+    if (!isBackground) setLoading(true);
+    if (!isBackground) setErr("");
 
     try {
-      const res = await fetch("/api/chat", { credentials: "include" });
+      const res = await fetch("/api/chat", {
+        credentials: "include",
+        cache: "no-store", // ✅ NOVO: sprečava keširanje
+      });
       const raw = await res.text();
 
       if (!res.ok) {
-        setErr(`HTTP ${res.status} – ${raw.slice(0, 200)}`);
+        if (!isBackground) setErr(`HTTP ${res.status} – ${raw.slice(0, 200)}`);
         return;
       }
 
       const data = JSON.parse(raw);
-      setChats(Array.isArray(data.chats) ? data.chats : []);
+      const next: ChatItem[] = Array.isArray(data.chats) ? data.chats : [];
+
+      // ✅ NOVO: signature (matchId + createdAt + text) za detekciju promene
+      const nextSig = next
+        .map(
+          (c) =>
+            `${c.matchId}|${c.lastMessage?.createdAt ?? ""}|${
+              c.lastMessage?.text ?? ""
+            }`
+        )
+        .join("||");
+
+      if (nextSig !== sigRef.current) {
+        sigRef.current = nextSig;
+        setChats(next);
+      }
     } catch (e: any) {
-      setErr(e?.message ?? "Fetch error");
+      if (!isBackground) setErr(e?.message ?? "Fetch error");
     } finally {
-      setLoading(false);
+      if (!isBackground) setLoading(false);
     }
   }
 
   useEffect(() => {
-    load();
+    // ✅ inicijalno učitavanje
+    load(false);
+
+    // ✅ NOVO: polling u pozadini (ne dira loading state)
+    const t = setInterval(() => load(true), 1000); // 1000ms; probaj 700-800 ako želiš "instant"
+    return () => clearInterval(t);
   }, []);
 
   return (
@@ -83,7 +109,6 @@ export default function ChatInboxPage() {
                 href={`/chat/${c.matchId}`}
                 className="flex items-center gap-3 rounded-2xl bg-white px-3 py-3 shadow-sm border border-slate-100 hover:bg-slate-50 transition"
               >
-                {/* avatar */}
                 <div className="h-12 w-12 overflow-hidden rounded-full bg-slate-100 shrink-0">
                   {avatar ? (
                     <img
@@ -98,7 +123,6 @@ export default function ChatInboxPage() {
                   )}
                 </div>
 
-                {/* text */}
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">
                     <p className="truncate font-medium text-slate-900">
@@ -114,7 +138,6 @@ export default function ChatInboxPage() {
                   </p>
                 </div>
 
-                {/* dot (placeholder za unread) */}
                 <div className="h-2 w-2 rounded-full bg-orange-500 opacity-60" />
               </Link>
             );

@@ -68,7 +68,7 @@ export default function SettingsPage() {
 
       <div className="mt-6 divide-y divide-slate-200 rounded-2xl border border-slate-200 bg-white">
          <Row label="Account Settings" href="settings/account" />
-        <Row label="Profile Settings" href="#" />
+        <Row label="Profile Settings" href="settings/profile" />
         <Row label="Terms and Conditions" href="#" />
 
         {uloga === "admin" && (
