@@ -1,0 +1,69 @@
+import type { PetProfile } from "@/lib/types";
+
+export default function PetCard({ pet }: { pet: PetProfile }) {
+  const firstImage =
+    typeof pet.images?.[0] === "string"
+      ? (pet.images?.[0] as string)
+      : (pet.images?.[0] as any)?.url;
+  async function swipe(type: "like" | "pass") {
+    await fetch("/api/swipes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ toPetId: pet.id, type }),
+    });
+  }
+  return (
+    <div className="card card-hover">
+      <div className="relative h-[520px] w-full bg-slate-50 overflow-hidden rounded-[inherit]">
+        {firstImage ? (
+          <img
+            src={firstImage}
+            alt={pet.ime}
+            className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
+          />
+        ) : (
+          <div className="flex h-full items-center justify-center text-sm text-slate-400">
+            No image
+          </div>
+        )}
+
+        {/* jači gradient dole da tekst bude čitljiv */}
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent" />
+
+        {/* Podaci NA SLICI */}
+        <div className="absolute bottom-20 left-0 right-0 p-5 text-white">
+          {/* vrsta (badge) */}
+          <div className="mb-2 inline-flex rounded-full bg-orange-500 px-2 py-1 text-[10px] font-bold uppercase tracking-wider">
+            {pet.vrsta === "dog" ? "PAS" : "MAČKA"}
+          </div>
+
+          {/* ime */}
+          <p className="text-3xl font-semibold leading-none">{pet.ime}</p>
+
+          {/* lokacija */}
+          <p className="mt-2 text-sm text-white/85">
+            {pet.grad ?? "Nepoznata lokacija"}
+          </p>
+
+          {/* interesovanja (chips) */}
+          {!!pet.interesovanja?.length && (
+            <div className="mt-4 flex flex-wrap gap-2">
+              {pet.interesovanja.slice(0, 4).map((t) => (
+                <span
+                  key={t}
+                  className="rounded-full bg-white/15 px-3 py-1 text-[12px] text-white/95 backdrop-blur border border-white/20"
+                >
+                  {t}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+
+
+      </div>
+    </div>
+  );
+}
+
