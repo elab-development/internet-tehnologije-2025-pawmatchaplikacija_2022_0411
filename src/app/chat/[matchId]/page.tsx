@@ -24,11 +24,12 @@ export default function ChatPage() {
   const [otherName, setOtherName] = useState<string>("Chat");
   const [otherAvatar, setOtherAvatar] = useState<string | null>(null);
 
-  // ✅ NOVO: signature da ne radimo setState ako nema promena
+
   const sigRef = useRef<string>("");
-  // ✅ NOVO: autoscroll anchor
+
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
+  const didInitialScrollRef = useRef(false);
   const apiUrl = useMemo(() => {
     if (!matchId) return "";
     return `/api/matches/${matchId}/message`;
@@ -70,9 +71,8 @@ export default function ChatPage() {
 
       // ✅ NOVO: signature (poslednja poruka je dovoljna)
       const last = nextMessages[nextMessages.length - 1];
-      const nextSig = `${last?.id ?? ""}|${last?.createdAt ?? ""}|${
-        last?.text ?? ""
-      }|${nextMessages.length}`;
+      const nextSig = `${last?.id ?? ""}|${last?.createdAt ?? ""}|${last?.text ?? ""
+        }|${nextMessages.length}`;
 
       // update meta (ovo može i bez sig-a)
       setOtherName(nextOtherName);
@@ -100,12 +100,26 @@ export default function ChatPage() {
 
     load(false);
 
-    // ✅ NOVO: polling (pozadinski)
+    //  NOVO: polling (pozadinski)
     const t = setInterval(() => load(true), 900); // probaj 700-1000ms
     return () => clearInterval(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [matchId]);
+  // ✅ INITIAL SCROLL kad se prvi put ucitaju poruke
+  useEffect(() => {
+    if (loading) return;
+    if (err) return;
+    if (didInitialScrollRef.current) return;
+    if (messages.length === 0) return;
 
+    didInitialScrollRef.current = true;
+
+    // bez animacije prvi put
+    bottomRef.current?.scrollIntoView({
+      behavior: "auto",
+      block: "end",
+    });
+  }, [loading, err, messages.length]);
   async function send() {
     const t = text.trim();
     if (!t || !apiUrl || sending) return;
@@ -155,7 +169,7 @@ export default function ChatPage() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-[420px] px-5 pt-6 pb-28">
+    <main className="mx-auto flex h-screen w-full max-w-[420px] flex-col px-5 pt-6">
       <div className="flex items-center gap-3">
         <button
           onClick={() => router.back()}
@@ -190,50 +204,48 @@ export default function ChatPage() {
       )}
 
       {!loading && !err && (
-        <div className="mt-6 space-y-3">
-          {messages.map((m) => {
-            const mine = myPetId && m.senderPetId === myPetId;
-            return (
-              <div
-                key={m.id}
-                className={`max-w-[75%] rounded-2xl px-4 py-2 text-sm ${
-                  mine
+        <div className="mt-6 flex-1 overflow-y-auto">
+          <div className="space-y-3">
+            {messages.map((m) => {
+              const mine = myPetId && m.senderPetId === myPetId;
+              return (
+                <div
+                  key={m.id}
+                  className={`max-w-[75%] rounded-2xl px-4 py-2 text-sm ${mine
                     ? "ml-auto bg-orange-500 text-white"
                     : "bg-slate-100 text-slate-800"
-                }`}
-              >
-                {m.text}
-              </div>
-            );
-          })}
+                    }`}
+                >
+                  {m.text}
+                </div>
+              );
+            })}
 
-          {/* ✅ NOVO: scroll anchor */}
-          <div ref={bottomRef} />
+            <div ref={bottomRef} />
+          </div>
         </div>
       )}
-
       {/* composer */}
-      <div className="fixed inset-x-0 bottom-0">
-        <div className="mx-auto w-full max-w-[420px] px-5 pb-5">
-          <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow">
-            <input
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              placeholder="Napiši poruku..."
-              className="h-11 flex-1 rounded-xl border border-slate-200 px-3 text-sm outline-none"
-              onKeyDown={(e) => {
-                if (e.key === "Enter") send();
-              }}
-            />
-            <button
-              type="button"
-              onClick={send}
-              disabled={sending || !text.trim()}
-              className="h-11 rounded-xl bg-orange-500 px-4 text-sm font-semibold text-white disabled:opacity-50"
-            >
-              {sending ? "..." : "Send"}
-            </button>
-          </div>
+      {/* composer */}
+      <div className="mt-4 pb-5">
+        <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow">
+          <input
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder="Napiši poruku..."
+            className="h-11 flex-1 rounded-xl border border-slate-200 px-3 text-sm outline-none"
+            onKeyDown={(e) => {
+              if (e.key === "Enter") send();
+            }}
+          />
+          <button
+            type="button"
+            onClick={send}
+            disabled={sending || !text.trim()}
+            className="h-11 rounded-xl bg-orange-500 px-4 text-sm font-semibold text-white disabled:opacity-50"
+          >
+            {sending ? "..." : "Send"}
+          </button>
         </div>
       </div>
     </main>

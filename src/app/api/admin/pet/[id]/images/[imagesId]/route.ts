@@ -23,13 +23,13 @@ async function requireUserId() {
 }
 
 // DELETE /api/pets/[id]/images/[imageId]
-export async function DELETE(_: Request, ctx: { params: Promise<{ id: string; imageId: string }> }) {
+export async function DELETE(_: Request, ctx: { params: Promise<{ id: string; imagesId: string }> }) {
   const userId = await requireUserId();
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { id, imageId } = await ctx.params;
+  const { id, imagesId } = await ctx.params;
   const petId = cleanString(id);
-  const imgId = cleanString(imageId);
+  const imgId = cleanString(imagesId);
 
   if (!petId || !imgId) return NextResponse.json({ error: "Invalid params" }, { status: 400 });
 
