@@ -265,3 +265,240 @@ button:focus {
 .leaflet-container {
   z-index: 0;
 }
+@import "tailwindcss";
+
+:root {
+  /* Light */
+  --background: 246 247 251; /* #f6f7fb */
+  --foreground: 15 23 42;    /* slate-900 */
+  --muted: 100 116 139;      /* slate-500 */
+  --border: 226 232 240;     /* slate-200 */
+  --card: 255 255 255;       /* white */
+  --primary: 249 115 22;     /* orange-500 */
+
+  --shadow: 0 18px 50px rgba(15, 23, 42, 0.12);
+  --shadow-strong: 0 22px 60px rgba(15, 23, 42, 0.14);
+
+  --radius: 28px;
+
+  /* Safe-area (iPhone notch) */
+  --sat: env(safe-area-inset-top, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: 15 17 21;
+    --foreground: 241 245 249;
+    --muted: 148 163 184;
+    --border: 51 65 85;
+    --card: 17 24 39;
+
+    --shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+    --shadow-strong: 0 22px 60px rgba(0, 0, 0, 0.45);
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+html {
+  /* bolji scroll na mobilnom */
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  color: rgb(var(--foreground));
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  /* Spreči horizontalni scroll */
+  overflow-x: hidden;
+
+  /* Mobile feel */
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+
+  /* Pozadina */
+  background:
+    radial-gradient(
+      900px 650px at 50% 0%,
+      rgba(255, 255, 255, 1) 0%,
+      rgba(var(--background), 1) 62%
+    );
+
+  /* “Phone frame” centriran na desktopu */
+  display: flex;
+  justify-content: center;
+  min-height:100vh; 
+  overflow-y:auto
+}
+
+/* Glavni “app” wrapper preko container-a (ako koristiš samo .container, ovo radi isto) */
+.container {
+  width: 100%;
+  max-width: 420px;
+
+  /* Safe-area + standard padding */
+  padding-top: calc(16px + var(--sat));
+  padding-right: calc(16px + var(--sar));
+  padding-bottom: calc(16px + var(--sab));
+  padding-left: calc(16px + var(--sal));
+
+  margin: 0 auto;
+
+  /* Daj prostora dole jer tabbar je fiksiran */
+  padding-bottom: calc(92px + var(--sab));
+}
+
+/* Malo zbijenije na manjim telefonima */
+@media (max-width: 360px) {
+  .container {
+    max-width: 360px;
+    padding-top: calc(12px + var(--sat));
+    padding-right: calc(12px + var(--sar));
+    padding-bottom: calc(92px + var(--sab));
+    padding-left: calc(12px + var(--sal));
+  }
+}
+
+/* Reusable "card" style */
+.card {
+  background: rgb(var(--card));
+  border: 1px solid rgb(var(--border));
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.card-hover:hover {
+  box-shadow: var(--shadow-strong);
+}
+
+/* Swipe dugmad */
+.fab {
+  width: 56px;
+  height: 56px;
+  border-radius: 999px;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  background: rgb(var(--card));
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.18);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fab:active {
+  transform: scale(0.98);
+}
+
+.fab-primary {
+  background: rgb(var(--primary));
+  color: white;
+  border: none;
+}
+
+/* Badge */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgb(var(--primary));
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+/* Chips */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 12px;
+  backdrop-filter: blur(8px);
+}
+
+/* Bottom tab bar — pravi mobilni */
+.tabbar {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(10px + var(--sab));
+
+  width: calc(min(420px, 100vw) - 32px);
+  max-width: calc(420px - 32px);
+
+  background: rgb(var(--card));
+  border: 1px solid rgb(var(--border));
+  border-radius: 18px;
+
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
+  padding: 12px 14px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+
+  z-index: 50;
+}
+
+.tabbar-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  background: rgba(248, 250, 252, 1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tabbar-btn-active {
+  background: rgb(var(--primary));
+  color: #fff;
+  border: none;
+}
+
+/* Sitni reset */
+button {
+  font: inherit;
+}
+button:focus {
+  outline: none;
+}
+
+/* animacija */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slideIn {
+  animation: slideIn 180ms ease-out;
+}
+.safe-bottom {
+  padding-bottom:220px;
+}
