@@ -56,8 +56,7 @@ export default function ChatInboxPage() {
       const nextSig = next
         .map(
           (c) =>
-            `${c.matchId}|${c.lastMessage?.createdAt ?? ""}|${
-              c.lastMessage?.text ?? ""
+            `${c.matchId}|${c.lastMessage?.createdAt ?? ""}|${c.lastMessage?.text ?? ""
             }`
         )
         .join("||");

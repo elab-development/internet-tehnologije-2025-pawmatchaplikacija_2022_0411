@@ -57,8 +57,7 @@ export type Message = {
   createdAt?: string;
 };
 
-// UI “agregati” (ovo ti najviše treba u komponentama)
-export type PetProfile = Pet & { images: string[] };
+export type PetProfile = Omit<Pet, "images"> & { images: string[] };
 
 export type MatchCard = {
   match: Match;

@@ -7,8 +7,9 @@ import Link from "next/link";
 
 export default async function AdminUsersPage() {
   const auth = await requireAdmin();
-  if (!auth.ok) return auth.res;
-
+    if (!auth.ok) {
+    return <div className="p-6">Nemaš pristup.</div>;
+  }
   const users = await db
     .select({
       id: user.id,
