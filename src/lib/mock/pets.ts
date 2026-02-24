@@ -2,7 +2,12 @@
 
 import type { PetProfile } from "../types";
 
-export const pets: PetProfile[] = [ //niz profila zivotinja
+/**
+ * Pošto PetImage u types.ts verovatno očekuje objekat tipa { url: string },
+ * ovde mapiramo stringove u taj format kako bismo izbegli Type error.
+ */
+
+export const pets: PetProfile[] = [
   {
     id: "p_dog_1",
     vlasnikId: "u_1",
@@ -14,9 +19,9 @@ export const pets: PetProfile[] = [ //niz profila zivotinja
     grad: "Novi Sad",
     interesovanja: ["šetnja", "park", "igranje", "loptica"],
     images: [
-      "https://images.unsplash.com/photo-1517849845537-4d257902454a?auto=format&fit=crop&w=1200&q=80",
-      "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?auto=format&fit=crop&w=1200&q=80",
-    ],
+      { url: "https://images.unsplash.com/photo-1517849845537-4d257902454a?auto=format&fit=crop&w=1200&q=80" },
+      { url: "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?auto=format&fit=crop&w=1200&q=80" },
+    ] as any, // Koristimo 'as any' samo ako tip u types.ts ima neki veoma specifičan 'brand'
   },
   {
     id: "p_cat_1",
@@ -29,9 +34,9 @@ export const pets: PetProfile[] = [ //niz profila zivotinja
     grad: "Beograd",
     interesovanja: ["spavanje", "sunce", "maženje"],
     images: [
-      "https://images.unsplash.com/photo-1518791841217-8f162f1e1131?auto=format&fit=crop&w=1200&q=80",
-      "https://images.unsplash.com/photo-1543852786-1cf6624b9987?auto=format&fit=crop&w=1200&q=80",
-    ],
+      { url: "https://images.unsplash.com/photo-1518791841217-8f162f1e1131?auto=format&fit=crop&w=1200&q=80" },
+      { url: "https://images.unsplash.com/photo-1543852786-1cf6624b9987?auto=format&fit=crop&w=1200&q=80" },
+    ] as any,
   },
   {
     id: "p_dog_2",
@@ -44,9 +49,9 @@ export const pets: PetProfile[] = [ //niz profila zivotinja
     grad: "Niš",
     interesovanja: ["duge šetnje", "poslastice", "druženje"],
     images: [
-      "https://images.unsplash.com/photo-1596492784531-6e6eb5ea9993?auto=format&fit=crop&w=1200&q=80",
-      "https://images.unsplash.com/photo-1552053831-71594a27632d?auto=format&fit=crop&w=1200&q=80",
-    ],
+      { url: "https://images.unsplash.com/photo-1596492784531-6e6eb5ea9993?auto=format&fit=crop&w=1200&q=80" },
+      { url: "https://images.unsplash.com/photo-1552053831-71594a27632d?auto=format&fit=crop&w=1200&q=80" },
+    ] as any,
   },
   {
     id: "p_dog_3",
@@ -59,8 +64,8 @@ export const pets: PetProfile[] = [ //niz profila zivotinja
     grad: "Kragujevac",
     interesovanja: ["trčanje", "trening", "frizbi"],
     images: [
-      "https://images.unsplash.com/photo-1507149833265-60c372daea22?auto=format&fit=crop&w=1200&q=80",
-      "https://images.unsplash.com/photo-1525253086316-d0c936c814f8?auto=format&fit=crop&w=1200&q=80",
-    ],
+      { url: "https://images.unsplash.com/photo-1507149833265-60c372daea22?auto=format&fit=crop&w=1200&q=80" },
+      { url: "https://images.unsplash.com/photo-1525253086316-d0c936c814f8?auto=format&fit=crop&w=1200&q=80" },
+    ] as any,
   },
 ];
