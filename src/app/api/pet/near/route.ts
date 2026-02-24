@@ -35,7 +35,7 @@ export async function GET(req: Request) {
   const userId = auth.user.id;
 
   const url = new URL(req.url);
-  const radiusKm = Number(url.searchParams.get("radiusKm") ?? "10");
+  const radiusKm = Number(url.searchParams.get("radiusKm") ?? "50");
 
   // 1️⃣ Uzmi lokaciju ulogovanog user-a
   const meRows = await db

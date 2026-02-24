@@ -71,7 +71,7 @@ function RecenterButton({ center }: { center: [number, number] }) {
       style={{
         position: "absolute",
         right: 16,
-        bottom: 110,
+        bottom: 16,
         zIndex: 1200,
         background: "white",
         border: "1px solid rgba(0,0,0,0.15)",
@@ -141,27 +141,32 @@ export default function MapClient() {
         // 3) CENTER
         setCenter([coords.lat, coords.lon]);
 
-        //  EKSTERNI API – Open-Meteo
-        const weatherRes = await fetch(
-          `https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lon}&current_weather=true`
-        );
-        const weatherJson = await weatherRes.json();
-
-        if (weatherJson?.current_weather) {
-          setWeather({
-            temperature: weatherJson.current_weather.temperature,
-            windspeed: weatherJson.current_weather.windspeed,
-          });
-        }
-
-        // 4) Near pets
-        const nearRes = await fetch("/api/pet/near?radiusKm=10");
+        // 4) Near pets (PRVO UCITAJ MARKERE)
+        const nearRes = await fetch("/api/pet/near?radiusKm=500");
         const nearJson = await nearRes.json();
+
 
         if (nearJson?.success && Array.isArray(nearJson.pets)) {
           setPets(nearJson.pets);
         } else {
           setPets([]);
+        }
+
+        // 5) Weather (NE SME DA SRUSI MAPU)
+        try {
+          const weatherRes = await fetch(
+            `https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lon}&current_weather=true`
+          );
+          const weatherJson = await weatherRes.json();
+
+          if (weatherJson?.current_weather) {
+            setWeather({
+              temperature: weatherJson.current_weather.temperature,
+              windspeed: weatherJson.current_weather.windspeed,
+            });
+          }
+        } catch (err) {
+          console.error("Weather error:", err);
         }
       } catch (e: any) {
         // Ako je user blokirao location
@@ -174,61 +179,69 @@ export default function MapClient() {
 
   if (error) return <div style={{ padding: 20 }}>{error}</div>;
   if (!center) return <div style={{ padding: 20 }}>Učitavam...</div>;
+return (
+ <div style={{ width: "100%", height: "100%", position: "relative" }}>
+        {/* 🌦 WEATHER PANEL */}
+        {weather && (
+          <div
+            style={{
+              position: "absolute",
+              top: 20,
+              left: "50%",
+              transform: "translateX(-50%)",
+              background: "white",
+              padding: "10px 18px",
+              borderRadius: 20,
+              boxShadow: "0 6px 20px rgba(0,0,0,0.15)",
+              zIndex: 1000,
+              fontWeight: 600,
+            }}
+          >
+            🌤 {weather.temperature}°C | 💨 {weather.windspeed} km/h
+          </div>
+        )}
 
-  return (
-    <div style={{ position: "fixed", inset: 0 }}>
-      {/* 🌦 WEATHER PANEL */}
-      {weather && (
-        <div
-          style={{
-            position: "absolute",
-            top: 20,
-            left: "50%",
-            transform: "translateX(-50%)",
-            background: "white",
-            padding: "10px 18px",
-            borderRadius: 20,
-            boxShadow: "0 6px 20px rgba(0,0,0,0.15)",
-            zIndex: 1000,
-            fontWeight: 600,
-          }}
-        >
-          🌤 {weather.temperature}°C | 💨 {weather.windspeed} km/h
-        </div>
-      )}
+        <MapContainer center={center} zoom={13} style={{ height: "100%", width: "100%" }}>
+          <TileLayer
+            attribution="© OpenStreetMap contributors"
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
 
-      <MapContainer center={center} zoom={13} style={{ height: "100%", width: "100%" }}>
-        <TileLayer
-          attribution="© OpenStreetMap contributors"
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
+          <RecenterButton center={center} />
 
-        <RecenterButton center={center} />
+          <Marker position={center} icon={myPinIcon}>
+            <Popup>Ovo si ti 📍</Popup>
+          </Marker>
 
-        <Marker position={center} icon={myPinIcon}>
-          <Popup>Ovo si ti 📍</Popup>
-        </Marker>
+          {pets.map((p, i) => {
+            const plat = Number(p.lat);
+            const plon = Number(p.lon);
 
-        {pets.map((p) => {
-          const plat = Number(p.lat);
-          const plon = Number(p.lon);
+            if (!isValidLatLon(plat, plon)) return null;
 
-          // ✅ preskoči ljubimce bez lokacije (da Leaflet ne pukne)
-          if (!isValidLatLon(plat, plon)) return null;
+            // ✅ mali pomak da se markeri ne preklapaju (≈ 20–80m)
+            const offset = ((i % 6) - 3) * 0.00035; // ~ 39m po koraku
+            const platJ = plat + offset;
+            const plonJ = plon + offset;
 
-          return (
-            <Marker key={p.id} position={[plat, plon]} icon={createNameIcon(p.ime)}>
-              <Popup>
-                <div style={{ cursor: "pointer" }} onClick={() => router.push(`/pet/${p.id}`)}>
-                  <b>{p.ime}</b>
-                  <br />
-                  <small>Klikni za profil</small>
-                </div>
-              </Popup>
-            </Marker>
-          );
-        })}
-      </MapContainer>
-    </div>
+            return (
+              <Marker
+                key={p.id}
+                position={[platJ, plonJ]}
+                icon={createNameIcon(p.ime)}
+              >
+                <Popup>
+                  <div style={{ cursor: "pointer" }} onClick={() => router.push(`/pet/${p.id}`)}>
+                    <b>{p.ime}</b>
+                    <br />
+                    <small>Klikni za profil</small>
+                  </div>
+                </Popup>
+              </Marker>
+            );
+          })}
+        </MapContainer>
+      </div>
+   
   );
 }

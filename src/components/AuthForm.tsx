@@ -94,18 +94,24 @@ export default function AuthForm({ mode }: { mode: Mode }) {
   }
 
   // ----- styles (inline kao kod tebe) -----
-  const page: React.CSSProperties = {
-    minHeight: "100vh",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#ffffff",
-    padding: 16,
+ const page: React.CSSProperties = {
+    width: "100vw", 
+    minHeight: "100vh", 
+    display: "flex", 
+    justifyContent: "center", 
+    alignItems: "flex-start", // Počinje od vrha da bi lakše skrolovala dugačka polja
+    backgroundColor: "#ffffff", // Bela pozadina svuda
+    paddingTop: "40px",
   };
 
-  const card: React.CSSProperties = {
+ const card: React.CSSProperties = {
     width: "100%",
-    maxWidth: 380,
+    maxWidth: 400,    // Zadržavamo širinu telefona
+    backgroundColor: "#ffffff",
+    padding: "20px 30px",
+    display: "flex",
+    flexDirection: "column",
+    // UKLONILI SMO: boxShadow, borderRadius (spoljni) i fiksni height
   };
 
   const label: React.CSSProperties = {
@@ -136,17 +142,18 @@ export default function AuthForm({ mode }: { mode: Mode }) {
     gap: 12,
   };
 
-  const btn: React.CSSProperties = {
-    height: 48,
-    borderRadius: 24,
+ const btn: React.CSSProperties = {
+    height: 52,
+    borderRadius: 26, // Skroz zaobljeno dugme kao na tvom dizajnu
     border: "none",
     cursor: loading || !canSubmit ? "not-allowed" : "pointer",
     fontSize: 16,
     fontWeight: 800,
     color: "white",
-    backgroundColor: isLogin ? "#FF8A00" : "#111827",
+    backgroundColor: isLogin ? "#FFB35C" : "#111827", // Svetlija narandžasta za login taster
     opacity: loading || !canSubmit ? 0.65 : 1,
-    marginTop: 6,
+    marginTop: 20,
+    boxShadow: isLogin ? "0 4px 15px rgba(255, 179, 92, 0.3)" : "none", // Blagi sjaj dugmeta
   };
 
   const errorBox: React.CSSProperties = {
